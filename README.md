@@ -36,13 +36,13 @@ pip install -r requirements.txt
 ```bash
 remove [OPTIONS] INFILE OUTFILE RANGES
 
-  Remove ranges of pages from a PDF file and save to outfile. Specify a range
-  using a '-', and multiple ranges or numbers using a ','.
+Remove ranges of pages from a PDF file and save to outfile. Specify a range
+using a '-', and multiple ranges or numbers using a ','.
 
 Arguments:
-  INFILE   [required]
-  OUTFILE  [required]
-  RANGES   [required]
+INFILE [required]
+OUTFILE [required]
+RANGES [required]
 ```
 
 Example to remove page 1, and page 189 up to and including 212:
@@ -148,3 +148,31 @@ Options:
 --page INTEGER [default: 0]
 --resolve / --no-resolve [default: no-resolve]
 ```
+
+## Advanced usage
+
+As an advanced example, the PDF Mossery 2024 calendar that can be found on
+https://www.mossery.co/products/2024-digital-planner contains gridded, vertical
+and horizontal layouts. To remove the gridded and horizontal layouts in an
+original unmodified (!) calendar file, use the following commands:
+
+```bash
+./apdfhelper.py remove calendar-2024.pdf output.pdf 38,40,41,43,44,46,47,49,51,53,54,56,57,59,60,62,63,65,67,69,70,72,73,75,76,78,80,82,83,85,86,88,89,91,93,95,96,98,99,101,102,104,105,107,109,111,112,114,115,117,118,120,122,124,125,127,128,130,131,133,135,137,138,140,141,143,144,146,147,149,151,153,154,156,157,159,160,162,164,166,167,169,170,172,173,175,176,178,180,182,183,185,186,188,189,191,193,195,196,198,199,201,202,204,205,207
+```
+
+Note that this removes the pages, which will result in broken links. Create a
+file with all named links:
+
+```
+./apdfhelper.py links output.pdf > links.txt
+```
+
+Then use a text editor to fix the broken links in `links.txt` (replace them with
+valid page numbers), and apply the new links to the modified file:
+
+```bash
+./apdfhelper.py rewrite output.pdf fixed.pdf links.txt --fit
+```
+
+Now the file `fixed.pdf` will contain the 2024 calendar, containing the vertical
+layout, with working links.
