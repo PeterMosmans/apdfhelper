@@ -31,8 +31,8 @@ def read_dictionary(filename: str) -> dict:
                 line = line.split(" ")
                 try:
                     result[line[0]] = int(line[1])
-                except ValueError:
-                    print(f"Could not read a valid page number for {line[0]}")
+                except (ValueError, IndexError) as e:
+                    print(f"Could not read a valid page number for {line[0]}: {e}")
     except IOError:
         logging.error("Could not read %s", filename)
     print(f"Read {len(result)} dictionary entries")
