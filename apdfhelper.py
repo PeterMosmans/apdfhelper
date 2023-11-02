@@ -18,10 +18,10 @@ from pikepdf import Page, Pdf, String
 app = typer.Typer()
 
 
-def read_links(filename):
-    """Return a dictionary with named links and their page numbers.
-    Format of the file is NAME PAGENUMBER.
-    Note that NAME can contain spaces: The last value at the right is chosen."""
+def read_dictionary(filename: str) -> dict:
+    """Return a dictionary to translate human-readable names to page numbers.
+    Format of the file is UNIQUE_NAME PAGENUMBER.
+    UNIQUE_NAME cannot contain spaces."""
     result = {}
     if not filename:
         return result
@@ -29,9 +29,34 @@ def read_links(filename):
         with open(filename, "r") as filehandle:
             for line in filehandle.read().splitlines():
                 line = line.split(" ")
+                try:
+                    result[line[0]] = int(line[1])
+                except ValueError:
+                    print(f"Could not read a valid page number for {line[0]}")
+    except IOError:
+        logging.error("Could not read %s", filename)
+    print(f"Read {len(result)} dictionary entries")
+    return result
+
+
+def read_links(filename: str, dictionary: str = None) -> dict:
+    """Return a dictionary with named links and their page numbers.
+    Format of the file is NAME [PAGENUMBER|UNIQUE_NAME].
+    Note that NAME can contain spaces: The last value at the right is chosen."""
+    result = {}
+    if not filename:
+        return result
+    try:
+        dictionary = read_dictionary(dictionary)
+        with open(filename, "r") as filehandle:
+            for line in filehandle.read().splitlines():
+                line = line.split(" ")
                 # Take the outermost value, as sometimes names have spaces in them
                 try:
-                    result[line[0]] = int(line[len(line) - 1])
+                    if line[len(line) - 1] in dictionary:
+                        result[line[0]] = int(dictionary[line[len(line) - 1]])
+                    else:
+                        result[line[0]] = int(line[len(line) - 1])
                 except ValueError:
                     print(f"Could not read a valid page number for {line[0]}")
     except IOError:
@@ -84,10 +109,7 @@ def retrieve_links(
                         if annot.get("/A").get("/S") == "/GoTo":
                             link_type = "internal"
                             link_target = annot.get("/A").get("/D")
-                            if link_target in resolved:
-                                link_name = resolved[link_target]
-                            else:
-                                link_name = "broken"
+                            link_name = resolved.get(link_target, "broken")
                         print(
                             f"{page.index + 1} {left} {top} {right} {bottom} {link_type} {link_target} {link_name}"
                         )
@@ -111,6 +133,7 @@ def resolve_names(pdf: Pdf):
 def rewrite_named_links(
     pdf: Pdf,
     configuration: str = None,
+    dictionary: str = None,
     outfile: str = None,
     detailed: bool = False,
     fit: bool = False,
@@ -119,7 +142,7 @@ def rewrite_named_links(
     If configuration is given, rewrite the name link to another page number.
     If outfile is given, write the resulting PDF to a file.
     If fit is given, rewrite the type of link to fit"""
-    transformation = read_links(configuration)
+    transformation = read_links(configuration, dictionary=dictionary)
     for kid in pdf.Root.Names.Dests.Kids:
         names = kid.Names
         for i in range(0, len(names), 2):
@@ -224,15 +247,19 @@ def links(infile: str, detailed: bool = False):
     """Extract all named links.\n
     Output format is: NAME PAGENUMBER"""
     pdf = open_pdf(infile)
-    rewrite_named_links(pdf, configuration=None, outfile=None, detailed=detailed)
+    rewrite_named_links(pdf, detailed=detailed)
 
 
 @app.command()
-def rewrite(infile: str, outfile: str, linkfile: str, fit: bool = False):
+def rewrite(
+    infile: str, outfile: str, linkfile: str, dictionary: str = None, fit: bool = False
+):
     """Rewrite links in a PDF file based on a configuration file.\n
     If fit is given, rewrite type of link to 'Fit to page'."""
     pdf = Pdf.open(infile)
-    rewrite_named_links(pdf, configuration=linkfile, outfile=outfile, fit=fit)
+    rewrite_named_links(
+        pdf, configuration=linkfile, dictionary=dictionary, outfile=outfile, fit=fit
+    )
 
 
 if __name__ == "__main__":

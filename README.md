@@ -84,7 +84,7 @@ Sometimes named links are broken: They point to non-existing pages. Or, you'd
 like to rewire the location of a named link. Use as input a text file,
 containing the named link, followed by a space and a page number.
 
-Example:
+Example contents of a link file:
 
 ```
 mossery-dpln-2023_third-edition.indd:2023-02-Index:241 2
@@ -94,6 +94,32 @@ mossery-dpln-2023_third-edition.indd:2023-03-YO-H1:3 29
 This rewrites the link named
 `mossery-dpln-2023_third-edition.indd:2023-02-Index:241` to page 2, and the link
 named `mossery-dpln-2023_third-edition.indd:2023-03-YO-H1:3` to page 29.
+
+Alternatively, you can supply dictionary, in order to map page numbers to a
+better human-readable format. This can be easier when for instance a lot of
+links point to the same page number. The dictionary consists of a unique name,
+and a page number. Then, in the link file, use that unique name instead of the
+page number.
+
+Example contents of a dictionary file:
+
+```
+JANUARY 14
+OCTOBER 23
+WEEK_40 24
+```
+
+Then, in the link file, you can supply WEEK_40 as page number, instead of a
+number:
+
+```
+mossery-dpln-2023_third-edition.indd:2023-04-WG-Week39:131 OCTOBER
+mossery-dpln-2023_third-edition.indd:2023-04-WG-Week3:15 JANUARY
+mossery-dpln-2023_third-edition.indd:2023-04-WG-Week40:135 WEEK_40
+```
+
+This might be easier when converting lots of similar links, or when often
+changing page numbers.
 
 #### Usage
 
