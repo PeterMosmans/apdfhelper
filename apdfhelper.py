@@ -49,6 +49,17 @@ def save_pdf(pdf, filename="output.pdf"):
         print(f"Could not save to {filename}: {e}")
 
 
+def remove_page(pdf: Pdf, index: int) -> Pdf:
+    """Remove a specific page and all of its keys in the dictionary.
+    Note that the index is 1-based."""
+    print(f"Removing page {index}")
+    page = pdf.pages.p(index)
+    for key in page.keys():
+        del page[key]
+    del pdf.pages[index - 1]
+    return pdf
+
+
 def retrieve_links(
     pdf: Pdf, index: int = 0, detailed: bool = False, resolve: bool = False
 ):
@@ -169,20 +180,24 @@ def open_pdf(infile: str) -> Pdf:
 
 
 @app.command()
-def remove(infile: str, outfile: str, start: int, stop: int):
-    """Remove one or more pages from a PDF file and save to outfile."""
-    pdf = open_pdf(infile)
-    if stop < start or stop > len(pdf.pages):
+def remove(infile: str, outfile: str, ranges: str):
+    """Remove ranges of pages from a PDF file and save to outfile. Specify a range using a '-', and multiple ranges or numbers using a ','."""
+    pages = []
+    try:
+        for segment in ranges.split(","):
+            subsegment = segment.split("-")
+            if len(subsegment) > 1:
+                pages += range(int(subsegment[0]), int(subsegment[1]) + 1)
+            else:
+                pages.append(int(subsegment[0]))
+    except ValueError as e:
         print(
-            f"Please specify a valid range for start and stop: {len(pdf.pages)} pages found"
+            f"Specify ranges using integers and '-', and use a ',' to specify multiple ranges: {e}"
         )
         sys.exit(-1)
-    for delete in reversed(range(start, stop + 1)):
-        print(f"Removing page {delete}")
-        page = pdf.pages.p(delete)
-        for key in page.keys():
-            del page[key]
-        del pdf.pages[delete - 1]
+    pdf = open_pdf(infile)
+    for delete in sorted(pages, reverse=True):
+        pdf = remove_page(pdf, delete)
     save_pdf(pdf, outfile)
 
 

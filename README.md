@@ -18,7 +18,7 @@ It can:
 - fix link types
 
   Ensure that internal links show the correct page, fitted in a PDF viewer.
-  
+
 Currently only a command-line version of this tool is supplied.
 
 ## Installation
@@ -34,21 +34,21 @@ pip install -r requirements.txt
 ### Remove one or more pages
 
 ```bash
-remove [OPTIONS] INFILE OUTFILE START STOP
+remove [OPTIONS] INFILE OUTFILE RANGES
 
-Remove one or more pages from a PDF file and save to outfile.
+  Remove ranges of pages from a PDF file and save to outfile. Specify a range
+  using a '-', and multiple ranges or numbers using a ','.
 
 Arguments:
-INFILE [required]
-OUTFILE [required]
-START [required]
-STOP [required]
+  INFILE   [required]
+  OUTFILE  [required]
+  RANGES   [required]
 ```
 
-Example:
+Example to remove page 1, and page 189 up to and including 212:
 
 ```
-python apdfhelper.py  calendar.pdf modified.pdf 3 13
+python apdfhelper.py calendar.pdf output.pdf 1,189-212
 ```
 
 ### Extract all named links from a PDF file
