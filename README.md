@@ -104,11 +104,11 @@ This rewrites the link named
 `mossery-dpln-2023_third-edition.indd:2023-02-Index:241` to page 2, and the link
 named `mossery-dpln-2023_third-edition.indd:2023-03-YO-H1:3` to page 29.
 
-Alternatively, you can supply dictionary, in order to map page numbers to a
+Alternatively, you can supply a dictionary, in order to map page numbers to a
 better human-readable format. This can be easier when for instance a lot of
-links point to the same page number. The dictionary consists of a unique name,
-and a page number. Then, in the link file, use that unique name instead of the
-page number.
+links point to the same page number, or you often change the ordering of pages.
+The dictionary consists of a unique name, and a page number. Then, in the link
+file, use that unique name instead of the page number.
 
 Example contents of a dictionary file:
 
