@@ -177,7 +177,9 @@ def rewrite_named_links(
         save_pdf(pdf, outfile)
 
 
-def retrieve_annotations(pdf: Pdf, location: bool = False, index: int = 0):
+def retrieve_annotations(
+    pdf: Pdf, location: bool = False, index: int = 0, detailed: bool = False
+):
     """Retrieve all text annotations of a specific page, or all pages."""
     header = ""
     for page in pdf.pages:
@@ -187,7 +189,9 @@ def retrieve_annotations(pdf: Pdf, location: bool = False, index: int = 0):
             if "/Annots" in page:
                 for annot in page.Annots:
                     if "/Subtype" in annot and annot.get("/Subtype") == "/FreeText":
-                        #                        left, top, right, bottom = annot.get("/Rect")
+                        if detailed:
+                            left, top, right, bottom = annot.get("/Rect")
+                            header += f"\n{left} {top} {right} {bottom} "
                         print(f"{header}{annot.Contents}")
                         header = ""
 
@@ -225,21 +229,23 @@ def remove(infile: str, outfile: str, ranges: str):
 
 
 @app.command()
-def notes(infile: str, page: int = 0, location: bool = False):
+def notes(infile: str, page: int = 0, location: bool = False, detailed: bool = False):
     """Extract all annotations as text on a specific page, or all pages.
     Optionally specify the location in the file."""
     pdf = open_pdf(infile)
-    retrieve_annotations(pdf, index=page, location=location)
+    retrieve_annotations(pdf, index=page, location=location, detailed=detailed)
 
 
 @app.command()
-def page_links(infile: str, page: int = 0, resolve: bool = False):
+def page_links(
+    infile: str, page: int = 0, resolve: bool = False, detailed: bool = False
+):
     """Display links on a specific page, or all pages.\n
     Output format is: pagenumber left top right bottom [INTERNAL|EXTERNAL] link.\n
     When resolve is given, specify the page number of the link instead of the named link.
     """
     pdf = open_pdf(infile)
-    retrieve_links(pdf, index=page, resolve=resolve)
+    retrieve_links(pdf, index=page, resolve=resolve, detailed=detailed)
 
 
 @app.command()

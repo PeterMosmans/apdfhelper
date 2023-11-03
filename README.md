@@ -171,17 +171,18 @@ apdfhelper.py page-links [OPTIONS] INFILE
 
 Display links on a specific page, or all pages.
 
-Output format is: pagenumber left top right bottom [INTERNAL | EXTERNAL] link.
+Output format is: pagenumber left top right bottom [internal | external] link.
 
 When resolve is given, specify the page number of the link instead of the
-named link.
+named link. Otherwise links might show up as broken.
 
 Arguments:
 INFILE [required]
 
 Options:
---page INTEGER [default: 0]
---resolve / --no-resolve [default: no-resolve]
+  --page INTEGER              [default: 0]
+  --resolve / --no-resolve    [default: no-resolve]
+  --detailed / --no-detailed  [default: no-detailed]
 ```
 
 ### Split PDF
