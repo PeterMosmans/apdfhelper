@@ -19,7 +19,16 @@ It can:
 
   Ensure that internal links show the correct page, fitted in a PDF viewer.
 
-Currently only a command-line version of this tool is supplied.
+- swap pages
+
+  Not happy with the current page ordering? Swap them around.
+
+- split PDF into multiple single pages
+
+  Extract all pages from a PDF file as single PDF files.
+
+Sorry, currently only a command-line version of this tool is supplied, no
+graphical interface exists (yet...).
 
 ## Installation
 
@@ -173,6 +182,23 @@ INFILE [required]
 Options:
 --page INTEGER [default: 0]
 --resolve / --no-resolve [default: no-resolve]
+```
+
+### Split PDF
+
+Say you want to extract each page of a PDF file as single PDF file. Use the
+split command to do exactly that. Naming of the extracted files can be set by
+specifying a prefix, which will be followed by the page number.
+
+```bash
+apdfhelper.py split [OPTIONS] INFILE PREFIX
+
+Split one PDF into multiple single pages. The name uses prefix and the page
+number.
+
+Arguments:
+INFILE [required]
+PREFIX [required]
 ```
 
 ## Advanced usage

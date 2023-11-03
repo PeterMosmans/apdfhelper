@@ -251,6 +251,16 @@ def links(infile: str, detailed: bool = False):
 
 
 @app.command()
+def split(infile: str, prefix: str):
+    """Split one PDF into multiple single pages. The name uses prefix and the page number."""
+    pdf = open_pdf(infile)
+    for index, page in enumerate(pdf.pages, 1):
+        single = Pdf.new()
+        single.pages.append(page)
+        save_pdf(single, f"{prefix}-{index:03d}.pdf")
+
+
+@app.command()
 def rewrite(
     infile: str, outfile: str, linkfile: str, dictionary: str = None, fit: bool = False
 ):
