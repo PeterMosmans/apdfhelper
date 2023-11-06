@@ -254,12 +254,12 @@ def rewrite_named_links(
                     if detailed:
                         print(f"{dest[2]} {dest[3]} {dest[4]}")
                     if fit and outfile:
-                        print(f"Changing type of {name} link to 'Fit'")
+                        logging.info(f"Changing type of {name} link to 'Fit'")
                         dest[1] = String("/Fit")
                 if name in transformation:
                     page = pdf.pages.p(transformation[name])
                     dest[0] = page.obj
-                    print(f"{name} rewriting {transformation[name]}")
+                    logging.info(f"rewriting {name} to page {transformation[name]}")
                 else:
                     page = Page(dest[0])
                     print(f"{name} {page.index + 1}")
@@ -286,7 +286,7 @@ def retrieve_notes(
         if not index or (index and (page.index == index - 1)):
             if headers:
                 if page.index + 1 in dictionary:
-                    header = f"\n{dictionary[page.index + 1]} (page {page.index + 1})\n"
+                    header = f"\n{dictionary[page.index + 1]}\n"
                 else:
                     header = f"\nPage {page.index + 1}\n"
             if "/Annots" in page:
@@ -334,16 +334,17 @@ def bookmarks(
 
 
 @app.command()
-def compare(original: str, modified: str) -> bool:
+def compare(original: str, modified: str, verbose: bool = False) -> bool:
     """Compare the number of notes and bookmarks from two PDF files."""
+    if verbose:
+        logging.getLogger().setLevel(logging.INFO)
     errors = False
     original_meta, modified_meta = {}, {}
     original_meta["notes"], modified_meta["notes"] = retrieve_notes(
         open_pdf(original)
     ), retrieve_notes(open_pdf(modified))
-    original_meta["bookmarks"], modified_meta["bookmarks"] = retrieve_bookmarks(
-        open_pdf(original)
-    ), retrieve_bookmarks(open_pdf(modified))
+    original_meta["bookmarks"], a = retrieve_bookmarks(open_pdf(original))
+    modified_meta["bookmarks"], a = retrieve_bookmarks(open_pdf(modified))
     if len(original_meta["notes"]) != len(modified_meta["notes"]):
         print(
             f"Number of notes don't match: {len(original_meta['notes'])} versus {len(modified_meta['notes'])}",
@@ -364,8 +365,10 @@ def compare(original: str, modified: str) -> bool:
 
 
 @app.command()
-def remove(infile: str, outfile: str, ranges: str):
+def remove(infile: str, outfile: str, ranges: str, verbose: bool = False):
     """Remove ranges of pages from a PDF file and save to outfile. Specify a range using a '-', and multiple ranges or numbers using a ','."""
+    if verbose:
+        logging.getLogger().setLevel(logging.INFO)
     pages = []
     try:
         for segment in ranges.split(","):
@@ -416,8 +419,10 @@ def links(infile: str, detailed: bool = False):
 
 
 @app.command()
-def split(infile: str, prefix: str):
+def split(infile: str, prefix: str, verbose: bool = False):
     """Split one PDF into multiple single pages. The name uses prefix and the page number."""
+    if verbose:
+        logging.getLogger().setLevel(logging.INFO)
     pdf = open_pdf(infile)
     for index, page in enumerate(pdf.pages, 1):
         single = Pdf.new()
