@@ -13,13 +13,23 @@ import logging
 import sys
 
 import typer
-from pikepdf import Page, Pdf, String
+from pikepdf import Dictionary, OutlineItem, Page, Pdf, String
 
 app = typer.Typer()
 
 
+def open_pdf(infile: str) -> Pdf:
+    """Open a PDF file."""
+    try:
+        pdf = Pdf.open(infile)
+        return pdf
+    except Exception as e:
+        print(f"Could not open {infile}: {e}")
+        sys.exit(-1)
+
+
 def read_dictionary(filename: str) -> dict:
-    """Return a dictionary to translate human-readable names to page numbers.
+    """Return a dictionary from a file, to translate human-readable names to page numbers.
     Format of the file is UNIQUE_NAME PAGENUMBER.
     UNIQUE_NAME cannot contain spaces."""
     result = {}
@@ -74,6 +84,36 @@ def save_pdf(pdf, filename="output.pdf"):
         print(f"Could not save to {filename}: {e}")
 
 
+def convert_bookmark_item(bookmark: OutlineItem, level: int = 0):
+    """Convert a bookmark (OutlineItem) into a readable format."""
+    if bookmark.action:
+        link_type, link_target, dest_index = convert_link(bookmark.action)
+    else:
+        dest = bookmark.to_dictionary_object(None)["/Dest"]
+        dest_index = Page(dest[0]).index + 1
+    result = f"{'  '*level}{bookmark.title} - {dest_index}"
+    for child in bookmark.children:
+        result += "\n" + convert_bookmark_item(child, level=level + 1)
+    return result
+
+
+def retrieve_bookmarks(pdf: Pdf) -> list:
+    """Read bookmarks from a PDF file."""
+    results = []
+    with pdf.open_outline() as outline:
+        for item in outline.root:
+            results.append(convert_bookmark_item(item))
+    return results
+
+
+def add_bookmark(pdf: Pdf, title: str, page: int) -> Pdf:
+    """Add bookmark to a PDF file."""
+    with pdf.open_outline() as outline:
+        item = OutlineItem(title, page - 1)
+        outline.root.append(item)
+    return pdf
+
+
 def remove_page(pdf: Pdf, index: int) -> Pdf:
     """Remove a specific page and all of its keys in the dictionary.
     Note that the index is 1-based."""
@@ -83,6 +123,20 @@ def remove_page(pdf: Pdf, index: int) -> Pdf:
         del page[key]
     del pdf.pages[index - 1]
     return pdf
+
+
+def convert_link(dictionary: Dictionary):
+    """Convert an annotation / dictionary item into a link."""
+    link_index = 0
+    if "/S" in dictionary and dictionary["/S"] == "/URI":
+        link_type = "external"
+        link_target = dictionary.get("/URI")
+    elif "/S" in dictionary and dictionary["/S"] == "/GoTo":
+        link_type = "internal"
+        link_target = dictionary.get("/D")[0]
+        dest_page, dest_type = Page(dictionary.get("/D")[0]), dictionary.get("/D")[1]
+        link_index = dest_page.index + 1
+    return link_type, link_target, link_index
 
 
 def retrieve_links(
@@ -192,18 +246,53 @@ def retrieve_annotations(
                         if detailed:
                             left, top, right, bottom = annot.get("/Rect")
                             header += f"\n{left} {top} {right} {bottom} "
-                        print(f"{header}{annot.Contents}")
+                        result.append(f"{header}{annot.Contents}")
                         header = ""
+    return result
 
 
-def open_pdf(infile: str) -> Pdf:
-    """Open a PDF file."""
-    try:
-        pdf = Pdf.open(infile)
-        return pdf
-    except Exception as e:
-        print(f"Could not open {infile}: {e}")
-        sys.exit(-1)
+@app.command()
+def bookmarks(
+    infile: str, outfile: str = "", add: bool = False, title: str = "", page: int = None
+):
+    """Print all bookmarks."""
+    pdf = open_pdf(infile)
+    if add and outfile:
+        pdf = add_bookmark(pdf, title, page)
+        save_pdf(pdf, outfile)
+    else:
+        for bookmark in retrieve_bookmarks(pdf):
+            print(bookmark)
+
+
+@app.command()
+def compare(original: str, modified: str) -> bool:
+    """Compare the number of notes and bookmarks from two PDF files."""
+    errors = False
+    original_meta, modified_meta = {}, {}
+    original_meta["notes"], modified_meta["notes"] = retrieve_notes(
+        open_pdf(original)
+    ), retrieve_notes(open_pdf(modified))
+    original_meta["bookmarks"], modified_meta["bookmarks"] = retrieve_bookmarks(
+        open_pdf(original)
+    ), retrieve_bookmarks(open_pdf(modified))
+    if len(original_meta["notes"]) != len(modified_meta["notes"]):
+        print(
+            f"Number of notes don't match: {len(original_meta['notes'])} versus {len(modified_meta['notes'])}",
+            file=sys.stderr,
+        )
+        errors = True
+    else:
+        print(f"Same number of notes: {len(original_meta['notes'])}")
+    if len(original_meta["bookmarks"]) != len(modified_meta["bookmarks"]):
+        print(
+            f"Number of bookmarks don't match: {len(modified_meta['bookmarks'])} versus {len(modified_meta['bookmarks'])}",
+            file=sys.stderr,
+        )
+        errors = True
+    else:
+        print(f"Same number of bookmarks: {len(original_meta['bookmarks'])}")
+    sys.exit(errors)
 
 
 @app.command()
