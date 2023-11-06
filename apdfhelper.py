@@ -29,22 +29,35 @@ def open_pdf(infile: str) -> Pdf:
 
 
 def read_toc(filename: str) -> (dict, dict):
-    """Return dictionaries from a file, containing page numbers and their bookmarks / titles.
+    """Return dictionaries from a file, containing bookmarks / titles followed by page numbers.
     The first dictionary uses page number as the key.
-    The second dictionary uses the title as key."""
+    The second dictionary uses the title as key, and uses tuple (page, parent) as value.
+    Currently only one level of nesting is supported."""
     pages, titles = {}, {}
+    parent = ""
     if not filename:
         return pages, titles
     try:
         with open(filename, "r") as filehandle:
             for line in filehandle.read().splitlines():
                 try:
-                    index = int(line.split(" ")[0])
+                    # The page number is always last
+                    index = int(line.split(" ")[len(line.split(" ")) - 1 :][0])
+                    if line[0] == " ":
+                        # leveled, use previous value as title
+                        line = line[1:]
+                    else:
+                        parent = line[0 : len(line) - (len(str(index)) + 1)]
+                    # Use everything but the page number for the title
+                    title = line[0 : len(line) - (len(str(index)) + 1)]
                     # Only store first entries
                     if index not in pages:
-                        pages[index] = line[len(str(index)) + 1 :]
-                    if line[len(str(index)) + 1 :] not in titles:
-                        titles[line[len(str(index)) + 1 :]] = int(index)
+                        pages[index] = title
+                    if title not in titles:
+                        if parent == title:
+                            titles[title] = (int(index), "")
+                        else:
+                            titles[title] = (int(index), parent)
                 except (ValueError, IndexError) as e:
                     print(f"Could not read a valid page number for {line[0]}: {e}")
     except (IOError, UnicodeDecodeError) as e:
@@ -75,7 +88,7 @@ def read_links(filename: str, toc: str = None) -> dict:
                         bookmark_title = line.split('"')[1]
                         if bookmark_title in titles:
                             # Convert bookmark title to page number
-                            index = int(titles[bookmark_title])
+                            index = int(titles[bookmark_title][0])
                         else:
                             print(
                                 f"Could not find an entry for {bookmark_title} in {toc}"
@@ -144,16 +157,23 @@ def delete_bookmarks(pdf: Pdf) -> Pdf:
 def import_bookmarks(pdf: Pdf, infile: str) -> Pdf:
     """Import bookmarks from infile and add them to PDF."""
     pages, titles = read_toc(infile)
-    for title, page in titles.items():
-        pdf = add_bookmark(pdf, title, page)
+    for title, (page, parent) in titles.items():
+        pdf = add_bookmark(pdf, title, page, parent=parent)
     return pdf
 
 
-def add_bookmark(pdf: Pdf, title: str, page: int) -> Pdf:
+def add_bookmark(pdf: Pdf, title: str, page: int, parent: str = "") -> Pdf:
     """Add bookmark to a PDF file."""
     with pdf.open_outline() as outline:
-        item = OutlineItem(title, page - 1)
-        outline.root.append(item)
+        new = OutlineItem(title, page - 1)
+        if not parent:
+            outline.root.append(new)
+        else:
+            logging.info(f"parent {parent} found for {title}")
+            for item in outline.root:
+                title = item.title
+                if parent == title:
+                    item.children.append(new)
     return pdf
 
 
