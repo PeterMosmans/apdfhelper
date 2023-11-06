@@ -12,13 +12,15 @@ It can:
   Would you like to have some bookmarks (an outline, or table of contents in
   PDF-parlance)? With this tool you can view and edit them.
 
+- extract notes
+
+  Extract notes (text annotations) in text format, ordered per page. If there is
+  a bookmark defined for that page, it will show the title on which page the
+  note(s) appear(s).
+
 - rewrite (broken) internal links
 
   Rewire named links in a document to specific pages.
-
-- extract annotations
-
-  Extract text annotations in text format.
 
 - fix link types
 
@@ -72,6 +74,20 @@ python apdfhelper.py bookmarks INFILE
 python apdfhelper.py bookmarks --add --title "Title of my bookmark" --page PAGENUMBER
 ```
 
+### Extract notes (annotations) from a PDF file
+
+Extract all notes (text annotations) from a PDF file, and optionally show the
+bookmark title or page number of the annotation.
+
+Example:
+
+```
+python apdfhelper.py notes --headers calendar.pdf
+```
+
+This will return a list of all text annotations in `calendar.pdf`, grouped per
+page.
+
 ### Extract all named links from a PDF file
 
 Instead of directly linking to page numbers, PDF links can be named. `links`
@@ -85,19 +101,6 @@ Example:
 ```
 python apdfhelper.py links calendar.pdf
 ```
-
-### Extract notes (annotations) from a PDF file
-
-Extract all notes (text annotations) from a PDF file, and optionally show the
-page number of the annotation.
-
-Example:
-
-```
-python apdfhelper.py notes --location calendar.pdf
-```
-
-This will return a list of all text annotations in a document, grouped per page.
 
 ### Rewrite links in a PDF file
 
