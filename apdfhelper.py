@@ -28,51 +28,70 @@ def open_pdf(infile: str) -> Pdf:
         sys.exit(-1)
 
 
-def read_dictionary(filename: str) -> dict:
-    """Return a dictionary from a file, to translate human-readable names to page numbers.
-    Format of the file is UNIQUE_NAME PAGENUMBER.
-    UNIQUE_NAME cannot contain spaces."""
-    result = {}
+def read_toc(filename: str) -> (dict, dict):
+    """Return dictionaries from a file, containing page numbers and their bookmarks / titles.
+    The first dictionary uses page number as the key.
+    The second dictionary uses the title as key."""
+    pages, titles = {}, {}
     if not filename:
-        return result
+        return pages, titles
     try:
         with open(filename, "r") as filehandle:
             for line in filehandle.read().splitlines():
-                line = line.split(" ")
                 try:
-                    result[line[0]] = int(line[1])
+                    index = int(line.split(" ")[0])
+                    # Only store first entries
+                    if index not in pages:
+                        pages[index] = line[len(str(index)) + 1 :]
+                    if line[len(str(index)) + 1 :] not in titles:
+                        titles[line[len(str(index)) + 1 :]] = int(index)
                 except (ValueError, IndexError) as e:
                     print(f"Could not read a valid page number for {line[0]}: {e}")
-    except IOError:
-        logging.error("Could not read %s", filename)
-    print(f"Read {len(result)} dictionary entries")
-    return result
+    except (IOError, UnicodeDecodeError) as e:
+        logging.error(f"Could not read {filename}: {e}")
+    logging.info(
+        f"Read {len(pages)} different pages and {len(titles)} different titles"
+    )
+    return pages, titles
 
 
-def read_links(filename: str, dictionary: str = None) -> dict:
-    """Return a dictionary from a file, with named links and their page numbers.
-    Format of the file is NAME [PAGENUMBER|UNIQUE_NAME].
-    Note that NAME can contain spaces: The last value at the right is chosen."""
+def read_links(filename: str, toc: str = None) -> dict:
+    """Return a dictionary from a file containing named links, with named links and their page numbers.
+    Format of the file is NAME PAGENUMBER.
+    Note that NAME can contain spaces: The last value at the right is chosen.
+    When toc is supplied, read bookmark titles from taht file.
+    If the value at the right contains double quotes, a bookmark title is expected."""
     result = {}
     if not filename:
         return result
     try:
-        dictionary = read_dictionary(dictionary)
+        pages, titles = read_toc(toc)
         with open(filename, "r") as filehandle:
             for line in filehandle.read().splitlines():
-                line = line.split(" ")
-                # Take the outermost value, as sometimes names have spaces in them
                 try:
-                    # TODO: Use the whole string except the page number.
-                    if line[len(line) - 1] in dictionary:
-                        result[line[0]] = int(dictionary[line[len(line) - 1]])
+                    # Check whether it's a bookmark title or a page number:
+                    if line[len(line) - 1] == '"':
+                        link_title = line.split('"')[0].strip()
+                        bookmark_title = line.split('"')[1]
+                        if bookmark_title in titles:
+                            # Convert bookmark title to page number
+                            index = int(titles[bookmark_title])
+                        else:
+                            print(
+                                f"Could not find an entry for {bookmark_title} in {toc}"
+                            )
+                            sys.exit(-1)
                     else:
-                        result[line[0]] = int(line[len(line) - 1])
-                except ValueError:
-                    print(f"Could not read a valid page number for {line[0]}")
+                        split = line.split(" ")
+                        link_title = " ".join(split[0 : len(split) - 1])
+                        index = int(split[len(split) - 1])
+                    result[link_title] = index
+                except ValueError as e:
+                    print(f"Could not read a valid page number for {line}: {e}")
+                    sys.exit(-1)
     except IOError:
         logging.error("Could not read %s", filename)
-    print(f"Read {len(result)} links")
+    logging.info(f"Read {len(result)} named links from {filename}")
     return result
 
 
@@ -85,30 +104,49 @@ def save_pdf(pdf, filename="output.pdf"):
         print(f"Could not save to {filename}: {e}")
 
 
-def convert_bookmark_item(bookmark: OutlineItem, level: int = 0) -> (str, str, int):
-    """Convert a bookmark (OutlineItem) into a readable format, as well as title and page number."""
+def convert_bookmark_item(
+    bookmark: OutlineItem, results: list, dictionary: dict, level: int = 0
+) -> (list, dict):
+    """Convert a bookmark (OutlineItem) into a title and page number.
+    Return a textual representation of the bookmarks and a dictionary per page."""
     dest_index = 0
     if bookmark.action:
         link_type, link_target, dest_index = convert_link(bookmark.action)
     else:
         dest = bookmark.to_dictionary_object(None)["/Dest"]
         dest_index = Page(dest[0]).index + 1
-    result = f"{'  '*level}{bookmark.title} - {dest_index}"
+    results.append(f"{' '*level}{bookmark.title} - {dest_index}")
+    dictionary[dest_index] = bookmark.title
     for child in bookmark.children:
-        result += "\n" + convert_bookmark_item(child, level=level + 1)
-    return result, bookmark.title, dest_index
+        results, dictionary = convert_bookmark_item(
+            child, results, dictionary, level=level + 1
+        )
+    return results, dictionary
 
 
 def retrieve_bookmarks(pdf: Pdf) -> (list, dict):
-    """Read bookmarks from a PDF file and return them as text list and dictionary.
+    """Read bookmarks from a PDF file and return them as textual list and a dictionary.
     Note that the dictionary will only contain the last title specified of that page."""
     results, dictionary = [], {}
     with pdf.open_outline() as outline:
         for item in outline.root:
-            bookmark, title, index = convert_bookmark_item(item)
-            results.append(bookmark)
-            dictionary[index] = title
+            results, dictionary = convert_bookmark_item(item, results, dictionary)
     return results, dictionary
+
+
+def delete_bookmarks(pdf: Pdf) -> Pdf:
+    """Delete all bookmarks from a PDF."""
+    with pdf.open_outline() as outline:
+        outline.root.clear()
+    return pdf
+
+
+def import_bookmarks(pdf: Pdf, infile: str) -> Pdf:
+    """Import bookmarks from infile and add them to PDF."""
+    pages, titles = read_toc(infile)
+    for title, page in titles.items():
+        pdf = add_bookmark(pdf, title, page)
+    return pdf
 
 
 def add_bookmark(pdf: Pdf, title: str, page: int) -> Pdf:
@@ -192,16 +230,16 @@ def resolve_names(pdf: Pdf):
 def rewrite_named_links(
     pdf: Pdf,
     configuration: str = None,
-    dictionary: str = None,
+    toc: str = None,
     outfile: str = None,
     detailed: bool = False,
     fit: bool = False,
-):
+) -> Pdf:
     """Print all named links with their corresponding page number.
     If configuration is given, rewrite the name link to another page number.
     If outfile is given, write the resulting PDF to a file.
     If fit is given, rewrite the type of link to fit"""
-    transformation = read_links(configuration, dictionary=dictionary)
+    transformation = read_links(configuration, toc=toc)
     for kid in pdf.Root.Names.Dests.Kids:
         names = kid.Names
         for i in range(0, len(names), 2):
@@ -232,14 +270,14 @@ def rewrite_named_links(
                     print(f"{name} rewriting {transformation[name]}")
                 else:
                     print(f"{name} broken")
-    if outfile:
-        save_pdf(pdf, outfile)
+    return pdf
 
 
 def retrieve_notes(
     pdf: Pdf, headers: bool = False, index: int = 0, detailed: bool = False
 ) -> list:
-    """Retrieve all text annotations of a specific page, or all pages."""
+    """Retrieve all text annotations of a specific page, or all pages.
+    If headers is specified, show a header (or bookmark title) per page."""
     result = []
     header = ""
     if headers:
@@ -264,12 +302,30 @@ def retrieve_notes(
 
 @app.command()
 def bookmarks(
-    infile: str, outfile: str = "", add: bool = False, title: str = "", page: int = None
+    infile: str,
+    outfile: str = "",
+    add: str = "",
+    delete: bool = False,
+    importfile: str = "",
+    title: str = "",
+    page: int = None,
+    verbose: bool = False,
 ):
-    """Print all bookmarks."""
+    """Manage bookmarks.
+    --add TITLE: add a single new bookmark with TITLE on page --page
+    --delete: delete all current bookmarks
+    --toc FILENAME: delete all current bookmarks, and import bookmarks from FILENAME."""
+    if verbose:
+        logging.getLogger().setLevel(logging.INFO)
     pdf = open_pdf(infile)
-    if add and outfile:
+    if add and page and outfile:
         pdf = add_bookmark(pdf, title, page)
+    if delete and outfile:
+        pdf = delete_bookmarks(pdf)
+    if importfile and outfile:
+        pdf = delete_bookmarks(pdf)
+        pdf = import_bookmarks(pdf, importfile)
+    if outfile:
         save_pdf(pdf, outfile)
     else:
         bookmarks, dictionary = retrieve_bookmarks(pdf)
@@ -371,14 +427,27 @@ def split(infile: str, prefix: str):
 
 @app.command()
 def rewrite(
-    infile: str, outfile: str, linkfile: str, dictionary: str = None, fit: bool = False
+    infile: str,
+    outfile: str,
+    linkfile: str,
+    toc: str = None,
+    fit: bool = False,
+    verbose: bool = False,
 ):
     """Rewrite links in a PDF file based on a configuration file.\n
-    If fit is given, rewrite type of link to 'Fit to page'."""
+    If fit is given, rewrite type of link to 'Fit to page'.
+    If toc is given, parse page numbers from a table of contents file."""
+    if verbose:
+        logging.getLogger().setLevel(logging.INFO)
     pdf = Pdf.open(infile)
-    rewrite_named_links(
-        pdf, configuration=linkfile, dictionary=dictionary, outfile=outfile, fit=fit
+    pdf = rewrite_named_links(
+        pdf, configuration=linkfile, toc=toc, outfile=outfile, fit=fit
     )
+    if toc:
+        pdf = delete_bookmarks(pdf)
+        pdf = import_bookmarks(pdf, toc)
+    if outfile:
+        save_pdf(pdf, outfile)
 
 
 if __name__ == "__main__":
