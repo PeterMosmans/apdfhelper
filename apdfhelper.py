@@ -298,7 +298,7 @@ def compare(original: str, modified: str) -> bool:
         print(f"Same number of notes: {len(original_meta['notes'])}")
     if len(original_meta["bookmarks"]) != len(modified_meta["bookmarks"]):
         print(
-            f"Number of bookmarks don't match: {len(modified_meta['bookmarks'])} versus {len(modified_meta['bookmarks'])}",
+            f"Number of bookmarks don't match: {len(original_meta['bookmarks'])} versus {len(modified_meta['bookmarks'])}",
             file=sys.stderr,
         )
         errors = True
