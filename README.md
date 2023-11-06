@@ -7,6 +7,11 @@ It can:
 
   If you don't use certain pages (anymore), you can remove them.
 
+- display or add bookmarks
+
+  Would you like to have some bookmarks (an outline, or table of contents in
+  PDF-parlance)? With this tool you can view and edit them.
+
 - rewrite (broken) internal links
 
   Rewire named links in a document to specific pages.
@@ -42,22 +47,29 @@ pip install -r requirements.txt
 
 ### Remove one or more pages
 
+Specify one page number, multiple page numbers (separated by a ','), or ranges
+of pages (separated by a '-') to be deleted.
+
 ```bash
-remove [OPTIONS] INFILE OUTFILE RANGES
-
-Remove ranges of pages from a PDF file and save to outfile. Specify a range
-using a '-', and multiple ranges or numbers using a ','.
-
-Arguments:
-INFILE [required]
-OUTFILE [required]
-RANGES [required]
+python apdfhelper.py remove INFILE OUTFILE RANGES
 ```
 
 Example to remove page 1, and page 189 up to and including 212:
 
 ```
 python apdfhelper.py calendar.pdf output.pdf 1,189-212
+```
+
+### View bookmarks
+
+```bash
+python apdfhelper.py bookmarks INFILE
+```
+
+### Add bookmarks
+
+```bash
+python apdfhelper.py bookmarks --add --title "Title of my bookmark" --page PAGENUMBER
 ```
 
 ### Extract all named links from a PDF file
@@ -74,10 +86,10 @@ Example:
 python apdfhelper.py links calendar.pdf
 ```
 
-### Extract annotations from a PDF file
+### Extract notes (annotations) from a PDF file
 
-Extract all text annotations from a PDF file, and optionally show the page
-number of the annotation.
+Extract all notes (text annotations) from a PDF file, and optionally show the
+page number of the annotation.
 
 Example:
 
@@ -180,9 +192,9 @@ Arguments:
 INFILE [required]
 
 Options:
-  --page INTEGER              [default: 0]
-  --resolve / --no-resolve    [default: no-resolve]
-  --detailed / --no-detailed  [default: no-detailed]
+--page INTEGER [default: 0]
+--resolve / --no-resolve [default: no-resolve]
+--detailed / --no-detailed [default: no-detailed]
 ```
 
 ### Split PDF
