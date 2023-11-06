@@ -85,8 +85,9 @@ def save_pdf(pdf, filename="output.pdf"):
         print(f"Could not save to {filename}: {e}")
 
 
-def convert_bookmark_item(bookmark: OutlineItem, level: int = 0):
-    """Convert a bookmark (OutlineItem) into a readable format."""
+def convert_bookmark_item(bookmark: OutlineItem, level: int = 0) -> (str, str, int):
+    """Convert a bookmark (OutlineItem) into a readable format, as well as title and page number."""
+    dest_index = 0
     if bookmark.action:
         link_type, link_target, dest_index = convert_link(bookmark.action)
     else:
@@ -95,16 +96,19 @@ def convert_bookmark_item(bookmark: OutlineItem, level: int = 0):
     result = f"{'  '*level}{bookmark.title} - {dest_index}"
     for child in bookmark.children:
         result += "\n" + convert_bookmark_item(child, level=level + 1)
-    return result
+    return result, bookmark.title, dest_index
 
 
-def retrieve_bookmarks(pdf: Pdf) -> list:
-    """Read bookmarks from a PDF file."""
-    results = []
+def retrieve_bookmarks(pdf: Pdf) -> (list, dict):
+    """Read bookmarks from a PDF file and return them as text list and dictionary.
+    Note that the dictionary will only contain the last title specified of that page."""
+    results, dictionary = [], {}
     with pdf.open_outline() as outline:
         for item in outline.root:
-            results.append(convert_bookmark_item(item))
-    return results
+            bookmark, title, index = convert_bookmark_item(item)
+            results.append(bookmark)
+            dictionary[index] = title
+    return results, dictionary
 
 
 def add_bookmark(pdf: Pdf, title: str, page: int) -> Pdf:
@@ -233,15 +237,20 @@ def rewrite_named_links(
 
 
 def retrieve_notes(
-    pdf: Pdf, location: bool = False, index: int = 0, detailed: bool = False
+    pdf: Pdf, headers: bool = False, index: int = 0, detailed: bool = False
 ) -> list:
     """Retrieve all text annotations of a specific page, or all pages."""
     result = []
     header = ""
+    if headers:
+        bookmarks, dictionary = retrieve_bookmarks(pdf)
     for page in pdf.pages:
         if not index or (index and (page.index == index - 1)):
-            if location:
-                header = f"\nPage {page.index + 1}\n"
+            if headers:
+                if page.index + 1 in dictionary:
+                    header = f"\n{dictionary[page.index + 1]} (page {page.index + 1})\n"
+                else:
+                    header = f"\nPage {page.index + 1}\n"
             if "/Annots" in page:
                 for annot in page.Annots:
                     if "/Subtype" in annot and annot.get("/Subtype") == "/FreeText":
@@ -263,7 +272,8 @@ def bookmarks(
         pdf = add_bookmark(pdf, title, page)
         save_pdf(pdf, outfile)
     else:
-        for bookmark in retrieve_bookmarks(pdf):
+        bookmarks, dictionary = retrieve_bookmarks(pdf)
+        for bookmark in bookmarks:
             print(bookmark)
 
 
@@ -320,11 +330,11 @@ def remove(infile: str, outfile: str, ranges: str):
 
 
 @app.command()
-def notes(infile: str, page: int = 0, location: bool = False, detailed: bool = False):
+def notes(infile: str, page: int = 0, headers: bool = False, detailed: bool = False):
     """Extract all annotations as text on a specific page, or all pages.
     Optionally specify the location in the file."""
     pdf = open_pdf(infile)
-    result = retrieve_notes(pdf, index=page, location=location, detailed=detailed)
+    result = retrieve_notes(pdf, index=page, headers=headers, detailed=detailed)
     for note in result:
         print(note)
 
