@@ -128,7 +128,7 @@ def convert_bookmark_item(
     else:
         dest = bookmark.to_dictionary_object(None)["/Dest"]
         dest_index = Page(dest[0]).index + 1
-    results.append(f"{' '*level}{bookmark.title} - {dest_index}")
+    results.append(f"{' '*level}{bookmark.title} {dest_index}")
     dictionary[dest_index] = bookmark.title
     for child in bookmark.children:
         results, dictionary = convert_bookmark_item(
