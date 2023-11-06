@@ -125,7 +125,8 @@ python apdfhelper.py notes --headers calendar.pdf
 ```
 
 This will return a list of all text annotations in `calendar.pdf`, grouped per
-page.
+page. If there is a bookmark defined for that page, it will show the title of
+the bookmark instead.
 
 ### Extract all named links from a PDF file
 
@@ -158,54 +159,38 @@ This rewrites the link named
 `mossery-dpln-2023_third-edition.indd:2023-02-Index:241` to page 2, and the link
 named `mossery-dpln-2023_third-edition.indd:2023-03-YO-H1:3` to page 29.
 
-Alternatively, you can supply a dictionary, in order to map page numbers to a
-better human-readable format. This can be easier when for instance a lot of
-links point to the same page number, or you often change the ordering of pages.
-The dictionary consists of a unique name, and a page number. Then, in the link
-file, use that unique name instead of the page number.
-
-Example contents of a dictionary file:
-
-```
-JANUARY 14
-OCTOBER 23
-WEEK_40 24
-```
-
-Then, in the link file, you can supply WEEK_40 as page number, instead of a
-number:
-
-```
-mossery-dpln-2023_third-edition.indd:2023-04-WG-Week39:131 OCTOBER
-mossery-dpln-2023_third-edition.indd:2023-04-WG-Week3:15 JANUARY
-mossery-dpln-2023_third-edition.indd:2023-04-WG-Week40:135 WEEK_40
-```
-
-This might be easier when converting lots of similar links, or when often
-changing page numbers.
+Alternatively, you can supply a table of contents file, in order to map page
+numbers to bookmark titles. This can be easier when for instance a lot of links
+point to the same page number, or when you often change the ordering of pages.
+The dictionary consists of a title, and a page number. Then, in the link file,
+use that unique name instead of the page number. Don't forget to put double
+quotes around the title in the link file.
 
 #### Usage
 
 ```
-apdfhelper.py rewrite [OPTIONS] INFILE OUTFILE LINKS
+apdfhelper.py rewrite [OPTIONS] INFILE OUTFILE LINKFILE
 
   Rewrite links in a PDF file based on a configuration file.
 
-  If fit is given, rewrite type of link to 'Fit to page'.
+  If fit is given, rewrite type of link to 'Fit to page'. If toc is given,
+  parse page numbers from a table of contents file.
 
 Arguments:
-  INFILE   [required]
-  OUTFILE  [required]
-  LINKS    [required]
+  INFILE    [required]
+  OUTFILE   [required]
+  LINKFILE  [required]
 
 Options:
-  --fit / --no-fit  [default: no-fit]
+  --toc TEXT
+  --fit / --no-fit          [default: no-fit]
+  --verbose / --no-verbose  [default: no-verbose]
 ```
 
 #### Example
 
 ```
-python apdfhelper.py rewrite calendar.pdf output.pdf filecontaininglinks.txt --fit
+python apdfhelper.py rewrite calendar.pdf output.pdf --toc toc.txt links.txt
 ```
 
 ### Detailed link information
