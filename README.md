@@ -202,6 +202,9 @@ Options:
 python apdfhelper.py rewrite calendar.pdf output.pdf --toc toc.txt links.txt
 ```
 
+Note that existing bookmarks will be removed, prior to importing new ones when
+`--toc` is supplied.
+
 ### Detailed link information
 
 If you'd like to see which page contains links (clickable areas), and what the
