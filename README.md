@@ -49,17 +49,20 @@ pip install -r requirements.txt
 
 When wanting to 're-organize' a PDF file, say `calendar.pdf`, first ensure that
 the pages themselves are in order. Then, create a text file with bookmarks,
-`toc.txt`, the table of contents. The format of the file is PAGENUMBER TITLE,
+`toc.txt`, the table of contents. The format of the file is TITLE PAGENUMBER,
 for example:
 
 ```
-3 Overview 2024-2025
-14 January
-29 Week 44
+Overview 2024-2025 3
+January 14
+November 28
+ Week 44 29
 ```
 
-This table of contents creates 3 bookmarks, for 'Overview 2024-2025' pointing to
-page 3, to 'January' on page 14, and 'Week 44' on page 29.
+This table of contents creates 4 bookmarks, for 'Overview 2024-2025' pointing to
+page 3, to 'January' on page 14, 'November' on page 28, with sub item 'Week 44'
+on page 29. The bookmarks support one level of nesting, where sub items start
+with a single space.
 
 Then, if there are any named links in the document defined, extract them using
 `python apdfhelper.py links calendar.pdf > links.txt`. This outputs all named
@@ -163,8 +166,14 @@ Alternatively, you can supply a table of contents file, in order to map page
 numbers to bookmark titles. This can be easier when for instance a lot of links
 point to the same page number, or when you often change the ordering of pages.
 The dictionary consists of a title, and a page number. Then, in the link file,
-use that unique name instead of the page number. Don't forget to put double
-quotes around the title in the link file.
+use that title instead of the page number. Don't forget to put double quotes
+around the title in the link file, for example:
+
+```
+mossery-dpln-2023_third-edition.indd:2023-04-M-Nov:147 "November"
+mossery-dpln-2023_third-edition.indd:2023-04-WG-Week43:144 27
+mossery-dpln-2023_third-edition.indd:2023-04-WG-Week44:148 "Week 44"
+```
 
 #### Usage
 
