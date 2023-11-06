@@ -50,7 +50,7 @@ def read_dictionary(filename: str) -> dict:
 
 
 def read_links(filename: str, dictionary: str = None) -> dict:
-    """Return a dictionary with named links and their page numbers.
+    """Return a dictionary from a file, with named links and their page numbers.
     Format of the file is NAME [PAGENUMBER|UNIQUE_NAME].
     Note that NAME can contain spaces: The last value at the right is chosen."""
     result = {}
@@ -63,6 +63,7 @@ def read_links(filename: str, dictionary: str = None) -> dict:
                 line = line.split(" ")
                 # Take the outermost value, as sometimes names have spaces in them
                 try:
+                    # TODO: Use the whole string except the page number.
                     if line[len(line) - 1] in dictionary:
                         result[line[0]] = int(dictionary[line[len(line) - 1]])
                     else:
@@ -231,10 +232,11 @@ def rewrite_named_links(
         save_pdf(pdf, outfile)
 
 
-def retrieve_annotations(
+def retrieve_notes(
     pdf: Pdf, location: bool = False, index: int = 0, detailed: bool = False
-):
+) -> list:
     """Retrieve all text annotations of a specific page, or all pages."""
+    result = []
     header = ""
     for page in pdf.pages:
         if not index or (index and (page.index == index - 1)):
@@ -322,7 +324,9 @@ def notes(infile: str, page: int = 0, location: bool = False, detailed: bool = F
     """Extract all annotations as text on a specific page, or all pages.
     Optionally specify the location in the file."""
     pdf = open_pdf(infile)
-    retrieve_annotations(pdf, index=page, location=location, detailed=detailed)
+    result = retrieve_notes(pdf, index=page, location=location, detailed=detailed)
+    for note in result:
+        print(note)
 
 
 @app.command()
