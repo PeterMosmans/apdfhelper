@@ -47,6 +47,45 @@ pip install -r requirements.txt
 
 ## Usage
 
+When wanting to 're-organize' a PDF file, say `calendar.pdf`, first ensure that
+the pages themselves are in order. Then, create a text file with bookmarks,
+`toc.txt`, the table of contents. The format of the file is PAGENUMBER TITLE,
+for example:
+
+```
+3 Overview 2024-2025
+14 January
+29 Week 44
+```
+
+This table of contents creates 3 bookmarks, for 'Overview 2024-2025' pointing to
+page 3, to 'January' on page 14, and 'Week 44' on page 29.
+
+Then, if there are any named links in the document defined, extract them using
+`python apdfhelper.py links calendar.pdf > links.txt`. This outputs all named
+links to `links.txt` with the page numbers it's referring to.
+
+Next, edit `links.txt` and use the correct page numbers or use any of the titles
+that are defined in the table of contents file `toc.txt`. When using titles,
+don't forget to use quotes around them, for example:
+
+```
+mossery-dpln-2023_third-edition.indd:2023-03-2023&2024YC:244 "Overview 2024-2025"
+mossery-dpln-2023_third-edition.indd:2023-04-M-Jan:5 "January"
+mossery-dpln-2023_third-edition.indd:2023-04-WG-Week44:148 "Week 44"
+mossery-dpln-2023_third-edition.indd:2023-04-Note-02:183 6
+```
+
+Next, embed the table of contents in `calendar.pdf` and create or update the
+links using the `rewrite` command:
+
+```bash
+python apdfhelper.py rewrite calendar.pdf --toc toc.txt output.pdf links.txt
+```
+
+And voila, the file `output.pdf` will now contain the defined bookmarks, as well
+as links to the correct pages.
+
 ### Remove one or more pages
 
 Specify one page number, multiple page numbers (separated by a ','), or ranges
