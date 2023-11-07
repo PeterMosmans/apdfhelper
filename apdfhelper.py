@@ -79,7 +79,7 @@ def read_links(filename: str, tocfile: str = None) -> dict:
     if not filename:
         return result
     try:
-        pages, titles = read_toc(tocfile)
+        _, titles = read_toc(tocfile)
         with open(filename, "r") as filehandle:
             for line in filehandle.read().splitlines():
                 try:
@@ -96,9 +96,9 @@ def read_links(filename: str, tocfile: str = None) -> dict:
                             )
                             sys.exit(-1)
                     else:
-                        split = line.split(" ")
-                        link_title = " ".join(split[0 : len(split) - 1])
-                        index = int(split[len(split) - 1])
+                        splitted = line.split(" ")
+                        link_title = " ".join(splitted[0 : len(splitted) - 1])
+                        index = int(split[len(splitted) - 1])
                     result[link_title] = index
                 except ValueError as e:
                     print(f"Could not read a valid page number for {line}: {e}")
@@ -125,7 +125,7 @@ def convert_bookmark_item(
     Return a textual representation of the bookmarks and a dictionary per page."""
     dest_index = 0
     if bookmark.action:
-        link_type, link_target, dest_index = convert_link(bookmark.action)
+        _, _, dest_index = convert_link(bookmark.action)
     else:
         dest = bookmark.to_dictionary_object(None)["/Dest"]
         dest_index = Page(dest[0]).index + 1
@@ -157,7 +157,7 @@ def delete_bookmarks(pdf: Pdf) -> Pdf:
 
 def import_bookmarks(pdf: Pdf, infile: str) -> Pdf:
     """Import bookmarks from infile and add them to PDF."""
-    pages, titles = read_toc(infile)
+    _, titles = read_toc(infile)
     for title, (page, parent) in titles.items():
         pdf = add_bookmark(pdf, title, page, parent=parent)
     return pdf
@@ -198,7 +198,7 @@ def convert_link(dictionary: Dictionary):
     elif "/S" in dictionary and dictionary["/S"] == "/GoTo":
         link_type = "internal"
         link_target = dictionary.get("/D")[0]
-        dest_page, dest_type = Page(dictionary.get("/D")[0]), dictionary.get("/D")[1]
+        dest_page = Page(dictionary.get("/D")[0])
         link_index = dest_page.index + 1
     return link_type, link_target, link_index
 
@@ -302,7 +302,7 @@ def retrieve_notes(
     result = []
     header = ""
     if headers:
-        bookmarks_, dictionary = retrieve_bookmarks(pdf)
+        _, dictionary = retrieve_bookmarks(pdf)
     for page in pdf.pages:
         if not index or (index and (page.index == index - 1)):
             if headers:
@@ -349,7 +349,7 @@ def toc(
     if outfile:
         save_pdf(pdf, outfile)
     else:
-        bookmarks, dictionary_ = retrieve_bookmarks(pdf)
+        bookmarks, _ = retrieve_bookmarks(pdf)
         for bookmark in bookmarks:
             print(bookmark)
 
@@ -364,8 +364,8 @@ def compare(original: str, modified: str, verbose: bool = False) -> bool:
     original_meta["notes"], modified_meta["notes"] = retrieve_notes(
         open_pdf(original)
     ), retrieve_notes(open_pdf(modified))
-    original_meta["bookmarks"], a = retrieve_bookmarks(open_pdf(original))
-    modified_meta["bookmarks"], a = retrieve_bookmarks(open_pdf(modified))
+    original_meta["bookmarks"], _ = retrieve_bookmarks(open_pdf(original))
+    modified_meta["bookmarks"], _ = retrieve_bookmarks(open_pdf(modified))
     if len(original_meta["notes"]) != len(modified_meta["notes"]):
         print(
             f"Number of notes don't match: {len(original_meta['notes'])} versus {len(modified_meta['notes'])}",
