@@ -29,9 +29,11 @@ def open_pdf(infile: str) -> Pdf:
 
 
 def read_toc(filename: str) -> (dict, dict):
-    """Return dictionaries from a file, containing bookmarks / titles followed by page numbers.
-    The first dictionary uses page number as the key.
-    The second dictionary uses the title as key, and uses tuple (page, parent) as value.
+    """Return dictionaries from a file, containing table of content titles followed by page numbers.
+
+    In PDF parlance, this is called an outline.
+    The first returned dictionary uses page number as the key.
+    The second dictionary uses the title as key, and tuples (page, parent) as values.
     Currently only one level of nesting is supported."""
     pages, titles = {}, {}
     parent = ""
@@ -65,17 +67,19 @@ def read_toc(filename: str) -> (dict, dict):
     return pages, titles
 
 
-def read_links(filename: str, toc: str = None) -> dict:
-    """Return a dictionary from a file containing named links, with named links and their page numbers.
-    Format of the file is NAME PAGENUMBER.
+def read_links(filename: str, tocfile: str = None) -> dict:
+    """Return a dictionary from a file containing named links,
+    having named links as the key and their page number as the value.
+    The format of the file is NAME [PAGENUMBER|"TOCTITLE"].
+    If the value at the right contains double quotes, a bookmark title is expected.
     Note that NAME can contain spaces: The last value at the right is chosen.
-    When toc is supplied, read bookmark titles from taht file.
-    If the value at the right contains double quotes, a bookmark title is expected."""
+    When tocfile is supplied, read titles from that file and use the correct page number.
+    """
     result = {}
     if not filename:
         return result
     try:
-        pages, titles = read_toc(toc)
+        pages, titles = read_toc(tocfile)
         with open(filename, "r") as filehandle:
             for line in filehandle.read().splitlines():
                 try:
@@ -88,7 +92,7 @@ def read_links(filename: str, toc: str = None) -> dict:
                             index = int(titles[bookmark_title][0])
                         else:
                             print(
-                                f"Could not find an entry for {bookmark_title} in {toc}"
+                                f"Could not find an entry for {bookmark_title} in {tocfile}"
                             )
                             sys.exit(-1)
                     else:
@@ -247,7 +251,7 @@ def resolve_names(pdf: Pdf):
 def rewrite_named_links(
     pdf: Pdf,
     configuration: str = None,
-    toc: str = None,
+    tocfile: str = None,
     outfile: str = None,
     detailed: bool = False,
     fit: bool = False,
@@ -256,7 +260,7 @@ def rewrite_named_links(
     If configuration is given, rewrite the name link to another page number.
     If outfile is given, write the resulting PDF to a file.
     If fit is given, rewrite the type of link to fit"""
-    transformation = read_links(configuration, toc=toc)
+    transformation = read_links(configuration, tocfile=tocfile)
     for kid in pdf.Root.Names.Dests.Kids:
         names = kid.Names
         for i in range(0, len(names), 2):
@@ -298,7 +302,7 @@ def retrieve_notes(
     result = []
     header = ""
     if headers:
-        bookmarks, dictionary = retrieve_bookmarks(pdf)
+        bookmarks_, dictionary = retrieve_bookmarks(pdf)
     for page in pdf.pages:
         if not index or (index and (page.index == index - 1)):
             if headers:
@@ -318,20 +322,20 @@ def retrieve_notes(
 
 
 @app.command()
-def bookmarks(
+def toc(
     infile: str,
     outfile: str = "",
     add: str = "",
     delete: bool = False,
-    importfile: str = "",
+    tocfile: str = "",
     title: str = "",
     page: int = None,
     verbose: bool = False,
 ):
-    """Manage bookmarks.
-    --add TITLE: add a single new bookmark with TITLE on page --page
-    --delete: delete all current bookmarks
-    --toc FILENAME: delete all current bookmarks, and import bookmarks from FILENAME."""
+    """Manage table of content entries.
+    --add TITLE: add a single table of content entry with TITLE for page --page
+    --delete: delete all current table of content entries
+    --tocfile FILENAME: delete all current entries, and import entries from FILENAME."""
     if verbose:
         logging.getLogger().setLevel(logging.INFO)
     pdf = open_pdf(infile)
@@ -339,13 +343,13 @@ def bookmarks(
         pdf = add_bookmark(pdf, title, page)
     if delete and outfile:
         pdf = delete_bookmarks(pdf)
-    if importfile and outfile:
+    if tocfile and outfile:
         pdf = delete_bookmarks(pdf)
-        pdf = import_bookmarks(pdf, importfile)
+        pdf = import_bookmarks(pdf, tocfile)
     if outfile:
         save_pdf(pdf, outfile)
     else:
-        bookmarks, dictionary = retrieve_bookmarks(pdf)
+        bookmarks, dictionary_ = retrieve_bookmarks(pdf)
         for bookmark in bookmarks:
             print(bookmark)
 
@@ -452,22 +456,22 @@ def rewrite(
     infile: str,
     outfile: str,
     linkfile: str,
-    toc: str = None,
+    tocfile: str = None,
     fit: bool = False,
     verbose: bool = False,
 ):
     """Rewrite links in a PDF file based on a configuration file.\n
     If fit is given, rewrite type of link to 'Fit to page'.
-    If toc is given, parse page numbers from a table of contents file."""
+    If tocfile is given, parse page numbers from a table of contents file."""
     if verbose:
         logging.getLogger().setLevel(logging.INFO)
     pdf = Pdf.open(infile)
     pdf = rewrite_named_links(
-        pdf, configuration=linkfile, toc=toc, outfile=outfile, fit=fit
+        pdf, configuration=linkfile, tocfile=tocfile, outfile=outfile, fit=fit
     )
-    if toc:
+    if tocfile:
         pdf = delete_bookmarks(pdf)
-        pdf = import_bookmarks(pdf, toc)
+        pdf = import_bookmarks(pdf, tocfile)
     if outfile:
         save_pdf(pdf, outfile)
 
