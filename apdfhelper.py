@@ -50,14 +50,11 @@ def read_toc(filename: str) -> (dict, dict):
                         parent = line[0 : len(line) - (len(str(index)) + 1)]
                     # Use everything but the page number for the title
                     title = line[0 : len(line) - (len(str(index)) + 1)]
-                    # Only store first entries
-                    if index not in pages:
-                        pages[index] = title
-                    if title not in titles:
-                        if parent == title:
-                            titles[title] = (int(index), "")
-                        else:
-                            titles[title] = (int(index), parent)
+                    pages[index] = title
+                    if parent == title:
+                        titles[title] = (int(index), "")
+                    else:
+                        titles[title] = (int(index), parent)
                 except (ValueError, IndexError) as e:
                     print(f"Could not read a valid page number for {line[0]}: {e}")
     except (IOError, UnicodeDecodeError) as e:
