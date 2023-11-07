@@ -109,11 +109,11 @@ def read_links(filename: str, tocfile: str = None) -> dict:
     return result
 
 
-def save_pdf(pdf, filename="output.pdf"):
+def save_pdf(pdf: Pdf, filename: str, fast: bool = False):
     """Save PDF to output file."""
     print(f"Saving PDF to {filename}")
     try:
-        pdf.save(filename)
+        pdf.save(filename, linearize=fast)
     except Exception as e:
         print(f"Could not save to {filename}: {e}")
 
@@ -459,10 +459,13 @@ def rewrite(
     tocfile: str = None,
     fit: bool = False,
     verbose: bool = False,
+    fast: bool = False,
 ):
     """Rewrite links in a PDF file based on a configuration file.\n
     If fit is given, rewrite type of link to 'Fit to page'.
-    If tocfile is given, parse page numbers from a table of contents file."""
+    If tocfile is given, parse page numbers from a table of contents file.
+    If fast is given, optimize PDF for faster web viewing (which increases the file size).
+    """
     if verbose:
         logging.getLogger().setLevel(logging.INFO)
     pdf = Pdf.open(infile)
@@ -473,7 +476,7 @@ def rewrite(
         pdf = delete_bookmarks(pdf)
         pdf = import_bookmarks(pdf, tocfile)
     if outfile:
-        save_pdf(pdf, outfile)
+        save_pdf(pdf, outfile, fast=fast)
 
 
 if __name__ == "__main__":
