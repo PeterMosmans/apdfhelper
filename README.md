@@ -7,16 +7,16 @@ It can:
 
   If you don't use certain pages (anymore), you can remove them.
 
-- display or add bookmarks
+- display or add table of contents
 
-  Would you like to have some bookmarks (an outline, or table of contents in
-  PDF-parlance)? With this tool you can view and edit them.
+  Would you like to have a table of contents (bookmarks, or an outline in
+  PDF-parlance)? With this tool you can view , edit and rewrite them.
 
 - extract notes
 
   Extract notes (text annotations) in text format, ordered per page. If there is
-  a bookmark defined for that page, it will show the title on which page the
-  note(s) appear(s).
+  a table of contents title defined for that page, it will show the title of the
+  page on which the note(s) appear(s).
 
 - rewrite (broken) internal links
 
@@ -48,7 +48,7 @@ pip install -r requirements.txt
 ## Usage
 
 When wanting to 're-organize' a PDF file, say `calendar.pdf`, first ensure that
-the pages themselves are in order. Then, create a text file with bookmarks,
+the pages themselves are in order. Then, create a text file with page titles,
 `toc.txt`, the table of contents. The format of the file is TITLE PAGENUMBER,
 for example:
 
@@ -59,10 +59,10 @@ November 28
  Week 44 29
 ```
 
-This table of contents creates 4 bookmarks, for 'Overview 2024-2025' pointing to
-page 3, to 'January' on page 14, 'November' on page 28, with sub item 'Week 44'
-on page 29. The bookmarks support one level of nesting, where sub items start
-with a single space.
+This table of contents creates 4 table of content entries, for 'Overview
+2024-2025' pointing to page 3, to 'January' on page 14, 'November' on page 28,
+with sub item 'Week 44' on page 29. The entries support one level of nesting,
+where sub items start with a single space.
 
 Then, if there are any named links in the document defined, extract them using
 `python apdfhelper.py links calendar.pdf > links.txt`. This outputs all named
@@ -83,11 +83,11 @@ Next, embed the table of contents in `calendar.pdf` and create or update the
 links using the `rewrite` command:
 
 ```bash
-python apdfhelper.py rewrite calendar.pdf --toc toc.txt output.pdf links.txt
+python apdfhelper.py rewrite calendar.pdf --tocfile toc.txt output.pdf links.txt
 ```
 
-And voila, the file `output.pdf` will now contain the defined bookmarks, as well
-as links to the correct pages.
+And voila, the file `output.pdf` will now contain the defined table of content
+entries, as well as links to the correct pages.
 
 ### Remove one or more pages
 
@@ -104,22 +104,22 @@ Example to remove page 1, and page 189 up to and including 212:
 python apdfhelper.py calendar.pdf output.pdf 1,189-212
 ```
 
-### View bookmarks
+### View table of content entries
 
 ```bash
-python apdfhelper.py bookmarks INFILE
+python apdfhelper.py toc INFILE
 ```
 
-### Add bookmarks
+### Add table of content entries
 
 ```bash
-python apdfhelper.py bookmarks --add --title "Title of my bookmark" --page PAGENUMBER
+python apdfhelper.py toc --add --title "Title of my page" --page PAGENUMBER
 ```
 
 ### Extract notes (annotations) from a PDF file
 
 Extract all notes (text annotations) from a PDF file, and optionally show the
-bookmark title or page number of the annotation.
+title or page number where the annotation appears.
 
 Example:
 
@@ -128,8 +128,8 @@ python apdfhelper.py notes --headers calendar.pdf
 ```
 
 This will return a list of all text annotations in `calendar.pdf`, grouped per
-page. If there is a bookmark defined for that page, it will show the title of
-the bookmark instead.
+page. If there is a title defined for that page, it will show the title of the
+page instead.
 
 ### Extract all named links from a PDF file
 
@@ -163,7 +163,7 @@ This rewrites the link named
 named `mossery-dpln-2023_third-edition.indd:2023-03-YO-H1:3` to page 29.
 
 Alternatively, you can supply a table of contents file, in order to map page
-numbers to bookmark titles. This can be easier when for instance a lot of links
+numbers to page titles. This can be easier when for instance a lot of links
 point to the same page number, or when you often change the ordering of pages.
 The dictionary consists of a title, and a page number. Then, in the link file,
 use that title instead of the page number. Don't forget to put double quotes
@@ -182,7 +182,7 @@ apdfhelper.py rewrite [OPTIONS] INFILE OUTFILE LINKFILE
 
   Rewrite links in a PDF file based on a configuration file.
 
-  If fit is given, rewrite type of link to 'Fit to page'. If toc is given,
+  If fit is given, rewrite type of link to 'Fit to page'. If tocfile is given,
   parse page numbers from a table of contents file.
 
 Arguments:
@@ -191,7 +191,7 @@ Arguments:
   LINKFILE  [required]
 
 Options:
-  --toc TEXT
+  --tocfile TEXT
   --fit / --no-fit          [default: no-fit]
   --verbose / --no-verbose  [default: no-verbose]
 ```
@@ -199,11 +199,11 @@ Options:
 #### Example
 
 ```
-python apdfhelper.py rewrite calendar.pdf output.pdf --toc toc.txt links.txt
+python apdfhelper.py rewrite calendar.pdf output.pdf --tocfile toc.txt links.txt
 ```
 
-Note that existing bookmarks will be removed, prior to importing new ones when
-`--toc` is supplied.
+Note that existing table of content entries will be removed, prior to importing
+new ones when `--tocfile` is supplied.
 
 ### Detailed link information
 
