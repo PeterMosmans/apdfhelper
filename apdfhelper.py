@@ -127,8 +127,12 @@ def convert_bookmark_item(
     if bookmark.action:
         _, _, dest_index = convert_link(bookmark.action)
     else:
-        dest = bookmark.to_dictionary_object(None)["/Dest"]
-        dest_index = Page(dest[0]).index + 1
+        try:
+            dest = bookmark.to_dictionary_object(None)["/Dest"]
+            dest_index = Page(dest[0]).index + 1
+        except ValueError:
+            logging.error(f"Title {bookmark.title} does not point to a page")
+            dest_index = 0
     results.append(f"{' '*level}{bookmark.title} {dest_index}")
     dictionary[dest_index] = bookmark.title
     for child in bookmark.children:
