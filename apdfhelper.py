@@ -98,7 +98,7 @@ def read_links(filename: str, tocfile: str = None) -> dict:
                     else:
                         splitted = line.split(" ")
                         link_title = " ".join(splitted[0 : len(splitted) - 1])
-                        index = int(split[len(splitted) - 1])
+                        index = int(splitted[len(splitted) - 1])
                     result[link_title] = index
                 except ValueError as e:
                     print(f"Could not read a valid page number for {line}: {e}")
