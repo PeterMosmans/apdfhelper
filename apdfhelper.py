@@ -28,15 +28,17 @@ def open_pdf(infile: str) -> Pdf:
         sys.exit(-1)
 
 
-def read_toc(filename: str) -> (dict, dict):
-    """Return dictionaries from a file, containing table of content titles followed by page numbers.
+def read_toc(filename: str) -> (dict, list):
+    """Parse a file containing a table of contents.
 
-    In PDF parlance, this is called an outline.
-    The first returned dictionary uses page number as the key.
-    The second dictionary uses the title as key, and tuples (page, parent) as values.
-    Currently only one level of nesting is supported."""
-    pages, titles = {}, {}
-    parent = ""
+    Return a dictionary using page numbers as the key, as a page can have only one title.
+    Return a list containing the titles, the indentation, and the page number.
+    """
+    pages, titles = {}, []
+    # Current level of entry
+    level = 0
+    # Remember current indentation level(s)
+    parents = []
     if not filename:
         return pages, titles
     try:
@@ -45,18 +47,21 @@ def read_toc(filename: str) -> (dict, dict):
                 try:
                     # The page number is always last
                     index = int(line.split(" ")[len(line.split(" ")) - 1 :][0])
-                    if line[0] == " ":
-                        # leveled, use previous value as title
-                        line = line[1:]
-                    else:
-                        parent = line[0 : len(line) - (len(str(index)) + 1)]
-                    # Use everything but the page number for the title
-                    title = line[0 : len(line) - (len(str(index)) + 1)]
+                    indentation = len(line) - len(line.lstrip(" "))
+                    title = line[indentation : len(line) - (len(str(index)) + 1)]
+                    if indentation > level:
+                        # a new sublevel, therefore store previous level
+                        parents.append(level)
+                        level = indentation
+                    elif indentation < level:
+                        while True:
+                            level = parents.pop()
+                            if level == indentation:
+                                break
+                    # There can be only one title per page
                     pages[index] = title
-                    if parent == title:
-                        titles[title] = (int(index), "")
-                    else:
-                        titles[title] = (int(index), parent)
+                    logging.info(f"{' '*level}{title} - page {index}")
+                    titles.append((title, level, index))
                 except (ValueError, IndexError) as e:
                     print(f"Could not read a valid page number for {line[0]}: {e}")
     except (IOError, UnicodeDecodeError) as e:
@@ -75,11 +80,15 @@ def read_links(filename: str, tocfile: str = None) -> dict:
     Note that NAME can contain spaces: The last value at the right is chosen.
     When tocfile is supplied, read titles from that file and use the correct page number.
     """
-    result = {}
+    result, toctitles = {}, {}
     if not filename:
         return result
     try:
         _, titles = read_toc(tocfile)
+        # There can be similar titles, yet point to a different page number.
+        # Convert the list to a dictionary, and prefer the last title
+        for title, _, index in titles:
+            toctitles[title] = index
         with open(filename, "r") as filehandle:
             for line in filehandle.read().splitlines():
                 try:
@@ -87,9 +96,9 @@ def read_links(filename: str, tocfile: str = None) -> dict:
                     if line[len(line) - 1] == '"':
                         link_title = line.split('"')[0].strip()
                         bookmark_title = line.split('"')[1]
-                        if bookmark_title in titles:
-                            # Convert bookmark title to page number
-                            index = int(titles[bookmark_title][0])
+                        if bookmark_title in toctitles:
+                            # Convert title to page number
+                            index = toctitles[bookmark_title]
                         else:
                             print(
                                 f"Could not find an entry for {bookmark_title} in {tocfile}"
@@ -162,23 +171,32 @@ def delete_bookmarks(pdf: Pdf) -> Pdf:
 def import_bookmarks(pdf: Pdf, infile: str) -> Pdf:
     """Import bookmarks from infile and add them to PDF."""
     _, titles = read_toc(infile)
-    for title, (page, parent) in titles.items():
-        pdf = add_bookmark(pdf, title, page, parent=parent)
+    # Store levels with their OutlineItems
+    levels = []
+    with pdf.open_outline() as outline:
+        for title, level, page in titles:
+            item = OutlineItem(title, page - 1)
+            logging.info(f"Reading entry level {level}: {title}")
+            if not level:
+                outline.root.append(item)
+                levels = [(level, item)]
+            else:
+                current_level, current_item = levels.pop()
+                if level == current_level:
+                    current_level, current_item = levels.pop()
+                if level > current_level:
+                    levels.append([current_level, current_item])
+                while level <= current_level:
+                    current_level, current_item = levels.pop()
+                current_item.children.append(item)
+                levels.append([level, item])
     return pdf
 
 
-def add_bookmark(pdf: Pdf, title: str, page: int, parent: str = "") -> Pdf:
+def add_bookmark(pdf: Pdf, title: str, page: int) -> Pdf:
     """Add bookmark to a PDF file."""
     with pdf.open_outline() as outline:
-        new = OutlineItem(title, page - 1)
-        if not parent:
-            outline.root.append(new)
-        else:
-            logging.info(f"parent {parent} found for {title}")
-            for item in outline.root:
-                title = item.title
-                if parent == title:
-                    item.children.append(new)
+        outline.root.append(OutlineItem(title, page - 1))
     return pdf
 
 
