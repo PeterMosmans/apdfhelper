@@ -10,7 +10,8 @@ It can:
 - display or add table of contents
 
   Would you like to have a table of contents (bookmarks, or an outline in
-  PDF-parlance)? With this tool you can view , edit and rewrite them.
+  PDF-parlance)? Title each page? With this tool you can view , edit and rewrite
+  page titles with a table of contents.
 
 - extract notes
 
@@ -28,7 +29,8 @@ It can:
 
 - swap pages
 
-  Not happy with the current page ordering? Swap them around.
+  Not happy with the current page ordering? Swap them around. Cut a page, and
+  insert it into another location.
 
 - split PDF into multiple single pages
 
@@ -45,12 +47,12 @@ Python 3 is required.
 pip install -r requirements.txt
 ```
 
-## Usage
+## Workflow
 
 When wanting to 're-organize' a PDF file, say `calendar.pdf`, first ensure that
-the pages themselves are in order. Then, create a text file with page titles,
-`toc.txt`, the table of contents. The format of the file is TITLE PAGENUMBER,
-for example:
+the pages themselves are in order, using the `cut`, `remove` and `swap`
+commands. Then, create a text file with page titles, `toc.txt`, the table of
+contents. The format of the file is TITLE PAGENUMBER, for example:
 
 ```
 Overview 2024-2025 3
@@ -61,8 +63,8 @@ November 28
 
 This table of contents creates 4 table of content entries, for 'Overview
 2024-2025' pointing to page 3, to 'January' on page 14, 'November' on page 28,
-with sub item 'Week 44' on page 29. The entries support one level of nesting,
-where sub items start with a single space.
+with sub item 'Week 44' on page 29. Entries support nesting, where spaces are
+used as delimiter.
 
 Then, if there are any named links in the document defined, extract them using
 `python apdfhelper.py links calendar.pdf > links.txt`. This outputs all named

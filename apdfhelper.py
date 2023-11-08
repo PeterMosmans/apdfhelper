@@ -429,7 +429,8 @@ def compare(original: str, modified: str, verbose: bool = False) -> bool:
 
 @app.command()
 def remove(infile: str, outfile: str, ranges: str, verbose: bool = False):
-    """Remove ranges of pages from a PDF file and save to outfile. Specify a range using a '-', and multiple ranges or numbers using a ','."""
+    """Remove one or ranges of pages from a PDF file.
+    Specify a range using a '-', and multiple ranges or page numbers using a ','."""
     if verbose:
         logging.getLogger().setLevel(logging.INFO)
     pages = []
