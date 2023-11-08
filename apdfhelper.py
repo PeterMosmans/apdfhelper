@@ -182,6 +182,14 @@ def add_bookmark(pdf: Pdf, title: str, page: int, parent: str = "") -> Pdf:
     return pdf
 
 
+def swap_page(pdf: Pdf, source: int, target: int) -> Pdf:
+    """Swap page SOURCE with TARGET."""
+    page_temp = pdf.pages.p(target)
+    pdf.pages[target - 1] = pdf.pages.p(source)
+    pdf.pages[source - 1] = page_temp
+    return pdf
+
+
 def remove_page(pdf: Pdf, index: int) -> Pdf:
     """Remove a specific page and all of its keys in the dictionary.
     Note that the index is 1-based."""
@@ -326,6 +334,18 @@ def retrieve_notes(
 
 
 @app.command()
+def cut(infile: str, outfile: str, source: int, target: int, verbose: bool = False):
+    """Cut page SOURCE and insert back on location TARGET."""
+    if verbose:
+        logging.getLogger().setLevel(logging.INFO)
+    pdf = open_pdf(infile)
+    for to_swap in range(source, target, -1):
+        logging.info(f"swapping {to_swap} with {to_swap-1}")
+        pdf = swap_page(pdf, to_swap, to_swap - 1)
+    save_pdf(pdf, outfile)
+
+
+@app.command()
 def toc(
     infile: str,
     outfile: str = "",
@@ -444,18 +464,6 @@ def links(infile: str, detailed: bool = False):
 
 
 @app.command()
-def split(infile: str, prefix: str, verbose: bool = False):
-    """Split one PDF into multiple single pages. The name uses prefix and the page number."""
-    if verbose:
-        logging.getLogger().setLevel(logging.INFO)
-    pdf = open_pdf(infile)
-    for index, page in enumerate(pdf.pages, 1):
-        single = Pdf.new()
-        single.pages.append(page)
-        save_pdf(single, f"{prefix}-{index:03d}.pdf")
-
-
-@app.command()
 def rewrite(
     infile: str,
     outfile: str,
@@ -481,6 +489,26 @@ def rewrite(
         pdf = import_bookmarks(pdf, tocfile)
     if outfile:
         save_pdf(pdf, outfile, fast=fast)
+
+
+@app.command()
+def split(infile: str, prefix: str, verbose: bool = False):
+    """Split one PDF into multiple single pages. The name uses prefix and the page number."""
+    if verbose:
+        logging.getLogger().setLevel(logging.INFO)
+    pdf = open_pdf(infile)
+    for index, page in enumerate(pdf.pages, 1):
+        single = Pdf.new()
+        single.pages.append(page)
+        save_pdf(single, f"{prefix}-{index:03d}.pdf")
+
+
+@app.command()
+def swap(infile: str, outfile: str, source: int, target: int, verbose: bool = False):
+    """Swap the pages source and target from a PDF file."""
+    if verbose:
+        logging.getLogger().setLevel(logging.INFO)
+    save_pdf(swap_page(open_pdf(infile), source, target), outfile)
 
 
 if __name__ == "__main__":
