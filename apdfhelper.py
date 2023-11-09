@@ -287,11 +287,13 @@ def rewrite_named_links(
     outfile: str = None,
     detailed: bool = False,
     fit: bool = False,
+    titles: dict = {},
 ) -> Pdf:
     """Print all named links with their corresponding page number.
     If configuration is given, rewrite the name link to another page number.
     If outfile is given, write the resulting PDF to a file.
-    If fit is given, rewrite the type of link to fit"""
+    If fit is given, rewrite the type of link to fit.
+    If titles is given, rewrite the page number to a title surrounded with quotes."""
     transformation = read_links(configuration, tocfile=tocfile)
     for kid in pdf.Root.Names.Dests.Kids:
         names = kid.Names
@@ -315,7 +317,10 @@ def rewrite_named_links(
                     logging.info(f"rewriting {name} to page {transformation[name]}")
                 else:
                     page = Page(dest[0])
-                    print(f"{name} {page.index + 1}")
+                    if page.index + 1 in titles:
+                        print(f'{name} "{titles.get(page.index + 1, page.index + 1)}"')
+                    else:
+                        print(f"{name} {page.index + 1}")
             except ValueError:
                 if name in transformation:
                     page = pdf.pages.p(transformation[name])
@@ -477,11 +482,17 @@ def page_links(
 
 
 @app.command()
-def links(infile: str, detailed: bool = False):
-    """Extract all named links.\n
-    Output format is: NAME PAGENUMBER"""
+def links(infile: str, detailed: bool = False, titles: bool = False):
+    """Extract all named links and the page number it's pointing towards.\n
+    Output format is: NAME PAGENUMBER.
+    When titles is specified, resolve page numbers to table of content entries.
+    """
     pdf = open_pdf(infile)
-    rewrite_named_links(pdf, detailed=detailed)
+    if titles:
+        _, titles = retrieve_titles(pdf)
+    else:
+        titles = {}
+    rewrite_named_links(pdf, titles=titles, detailed=detailed)
 
 
 @app.command()
