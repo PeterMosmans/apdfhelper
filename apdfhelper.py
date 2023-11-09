@@ -153,8 +153,8 @@ def convert_bookmark_item(
     return results, dictionary
 
 
-def retrieve_bookmarks(pdf: Pdf) -> (list, dict):
-    """Read bookmarks from a PDF file and return them as textual list and a dictionary.
+def retrieve_titles(pdf: Pdf) -> (list, dict):
+    """Read table of content entries from a PDF file and return them as textual list and a dictionary.
     Note that the dictionary will only contain the last title specified of that page."""
     results, dictionary = [], {}
     with pdf.open_outline() as outline:
@@ -330,18 +330,18 @@ def retrieve_notes(
     pdf: Pdf, headers: bool = False, index: int = 0, detailed: bool = False
 ) -> list:
     """Retrieve all text annotations of a specific page, or all pages.
-    If headers is specified, show a header (or bookmark title) per page."""
+    If headers is specified, show a header (or page title) for each page containing notes.
+    """
     result = []
     header = ""
     if headers:
-        _, dictionary = retrieve_bookmarks(pdf)
+        _, titles = retrieve_titles(pdf)
     for page in pdf.pages:
         if not index or (index and (page.index == index - 1)):
             if headers:
-                if page.index + 1 in dictionary:
-                    header = f"\n{dictionary[page.index + 1]}\n"
-                else:
-                    header = f"\nPage {page.index + 1}\n"
+                header = (
+                    "\n" + titles.get(page.index + 1, f"Page {page.index + 1}") + "\n"
+                )
             if "/Annots" in page:
                 for annot in page.Annots:
                     if "/Subtype" in annot and annot.get("/Subtype") == "/FreeText":
@@ -393,9 +393,9 @@ def toc(
     if outfile:
         save_pdf(pdf, outfile)
     else:
-        bookmarks, _ = retrieve_bookmarks(pdf)
-        for bookmark in bookmarks:
-            print(bookmark)
+        titles, _ = retrieve_titles(pdf)
+        for title in titles:
+            print(title)
 
 
 @app.command()
