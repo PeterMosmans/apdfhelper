@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=logging-fstring-interpolation
 
 """apdfhelper - perform various functions on PDF files
 
