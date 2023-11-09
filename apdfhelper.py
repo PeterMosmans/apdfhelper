@@ -154,8 +154,9 @@ def convert_bookmark_item(
 
 
 def retrieve_titles(pdf: Pdf) -> (list, dict):
-    """Read table of content entries from a PDF file and return them as textual list and a dictionary.
-    Note that the dictionary will only contain the last title specified of that page."""
+    """Read table of content entries from a PDF file and return them as textual
+    list, as well as a dictionary. Note that the dictionary will only contain the last title
+    specified of that page."""
     results, dictionary = [], {}
     with pdf.open_outline() as outline:
         for item in outline.root:
@@ -528,7 +529,8 @@ def rewrite(
 
 @app.command()
 def split(infile: str, prefix: str, verbose: bool = False):
-    """Split one PDF into multiple single pages. The name uses prefix and the page number."""
+    """Split one PDF into multiple single pages. The name uses prefix and the
+    page number."""
     if verbose:
         logging.getLogger().setLevel(logging.INFO)
     pdf = open_pdf(infile)
