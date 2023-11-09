@@ -42,7 +42,7 @@ def read_toc(filename: str) -> (dict, list):
     if not filename:
         return pages, titles
     try:
-        with open(filename, "r") as filehandle:
+        with open(filename, "r", encoding="utf-8") as filehandle:
             for line in filehandle.read().splitlines():
                 try:
                     # The page number is always last
@@ -89,7 +89,7 @@ def read_links(filename: str, tocfile: str = None) -> dict:
         # Convert the list to a dictionary, and prefer the last title
         for title, _, index in titles:
             toctitles[title] = index
-        with open(filename, "r") as filehandle:
+        with open(filename, "r", encoding="utf-8") as filehandle:
             for line in filehandle.read().splitlines():
                 try:
                     # Check whether it's a bookmark title or a page number:
