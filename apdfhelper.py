@@ -15,6 +15,7 @@ import sys
 
 import typer
 from pikepdf import Dictionary, OutlineItem, Page, Pdf, String
+from pikepdf._core import PdfError
 
 app = typer.Typer()
 
@@ -24,8 +25,8 @@ def open_pdf(infile: str) -> Pdf:
     try:
         pdf = Pdf.open(infile)
         return pdf
-    except Exception as e:
-        print(f"Could not open {infile}: {e}")
+    except (IOError, PdfError) as e:
+        print(f"Could not open {infile}: {e}", file=sys.stderr)
         sys.exit(-1)
 
 
@@ -124,8 +125,8 @@ def save_pdf(pdf: Pdf, filename: str, fast: bool = False):
     print(f"Saving PDF to {filename}")
     try:
         pdf.save(filename, linearize=fast)
-    except Exception as e:
-        print(f"Could not save to {filename}: {e}")
+    except (IOError, PdfError) as e:
+        print(f"Could not save to {filename}: {e}", file=sys.stderr)
 
 
 def convert_bookmark_item(
