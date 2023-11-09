@@ -416,8 +416,8 @@ def compare(original: str, modified: str, verbose: bool = False) -> bool:
     original_meta["notes"], modified_meta["notes"] = retrieve_notes(
         open_pdf(original)
     ), retrieve_notes(open_pdf(modified))
-    original_meta["bookmarks"], _ = retrieve_bookmarks(open_pdf(original))
-    modified_meta["bookmarks"], _ = retrieve_bookmarks(open_pdf(modified))
+    original_meta["bookmarks"], _ = retrieve_titles(open_pdf(original))
+    modified_meta["bookmarks"], _ = retrieve_titles(open_pdf(modified))
     if len(original_meta["notes"]) != len(modified_meta["notes"]):
         print(
             f"Number of notes don't match: {len(original_meta['notes'])} versus {len(modified_meta['notes'])}",
