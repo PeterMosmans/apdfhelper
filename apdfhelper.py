@@ -303,6 +303,9 @@ def rewrite_named_links(
             # dest[1] can be either "/XYZ" with left top zoom as [2], [3], [4]
             #                or "/Fit"
             try:
+                # Sometimes this is a Dictionary instead of an Array
+                if isinstance(dest, Dictionary):
+                    dest = dest.get("/D")
                 if detailed:
                     print(f"{dest[1]}")
                 if str(dest[1]) == "/XYZ":
