@@ -439,6 +439,23 @@ def compare(original: str, modified: str, verbose: bool = False) -> bool:
 
 
 @app.command()
+def duplicate(
+    infile: str,
+    outfile: str,
+    source: int,
+    target: int,
+    verbose: bool = False,
+    fast: bool = False,
+):
+    """Duplicate page SOURCE and insert it into location TARGET."""
+    if verbose:
+        logging.getLogger().setLevel(logging.INFO)
+    pdf = open_pdf(infile)
+    pdf.pages.insert(target, pdf.pages.p(source))
+    save_pdf(pdf, outfile, fast=fast)
+
+
+@app.command()
 def remove(infile: str, outfile: str, ranges: str, verbose: bool = False):
     """Remove one or ranges of pages from a PDF file.
     Specify a range using a '-', and multiple ranges or page numbers using a ','."""
