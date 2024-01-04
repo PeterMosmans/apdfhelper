@@ -1,5 +1,25 @@
 # Changelog
 
+## [1.3.0](https://github.com/PeterMosmans/apdfhelper/compare/1.2.0...1.3.0) (2024-01-04)
+
+
+### Features
+
+* add cut and swap functions ([535a73f](https://github.com/PeterMosmans/apdfhelper/commit/535a73fa530eb1f632f8cabea09099f37de5d6e3))
+* add option to duplicate a page ([e86f360](https://github.com/PeterMosmans/apdfhelper/commit/e86f360ceb294a37da04e0690225d14ff191f213))
+* add option to inject page from another file ([cb38628](https://github.com/PeterMosmans/apdfhelper/commit/cb386281b620a9bbc63174eecade5ac76c841312))
+* allow named links to point to toc titles ([3285c01](https://github.com/PeterMosmans/apdfhelper/commit/3285c01b2d3474703087b949c1a1155270c07273))
+* improve error handling for undefined toc entries ([3139ffa](https://github.com/PeterMosmans/apdfhelper/commit/3139ffae6694670dfa8c50fa64a4d19b480609b5))
+* support nested table of contents ([05f145f](https://github.com/PeterMosmans/apdfhelper/commit/05f145fce5e0676d9deb53e97b38cb81102156c2))
+
+
+### Bug Fixes
+
+* catch specific exceptions ([9b19d2b](https://github.com/PeterMosmans/apdfhelper/commit/9b19d2b9e0eba2127ba43c471d03aff594de2fad))
+* deal with multiple data structures ([4fdb55f](https://github.com/PeterMosmans/apdfhelper/commit/4fdb55f57f94d423002675ddf568c98b2ad5473a))
+* use correct function names for toc titles ([98950a6](https://github.com/PeterMosmans/apdfhelper/commit/98950a646956265c7ba905fe85c25547f7d4162f))
+* use correct naming for variable ([485ec98](https://github.com/PeterMosmans/apdfhelper/commit/485ec985ce24f05e8f97714cc972942590e3b844))
+
 ## [1.2.0](https://github.com/PeterMosmans/apdfhelper/compare/1.1.0...1.2.0) (2023-11-07)
 
 
