@@ -3,7 +3,7 @@
 
 """apdfhelper - perform various functions on PDF files
 
-Copyright (C) 2023 Peter Mosmans [Go Forward]
+Copyright (C) 2023-2024 Peter Mosmans [Go Forward]
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
@@ -452,6 +452,25 @@ def duplicate(
         logging.getLogger().setLevel(logging.INFO)
     pdf = open_pdf(infile)
     pdf.pages.insert(target, pdf.pages.p(source))
+    save_pdf(pdf, outfile, fast=fast)
+
+
+@app.command()
+def inject(
+    infile: str,
+    target: int,
+    fromfile: str,
+    source: int,
+    outfile: str,
+    verbose: bool = False,
+    fast: bool = False,
+):
+    """Inject (copy) page SOURCE from FROMFILE and insert it into location TARGET of INFILE."""
+    if verbose:
+        logging.getLogger().setLevel(logging.INFO)
+    pdf = open_pdf(infile)
+    sourcepdf = open_pdf(fromfile)
+    pdf.pages.insert(target - 1, sourcepdf.pages.p(source))
     save_pdf(pdf, outfile, fast=fast)
 
 

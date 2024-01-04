@@ -1,7 +1,7 @@
 # apdfhelper: Annotated PDF Helper
 
 This tool is originally meant to customize a PDF planner, and enhance its usage.
-It can:
+With PDF files, it can:
 
 - remove pages
 
@@ -35,6 +35,11 @@ It can:
 - split PDF into multiple single pages
 
   Extract all pages from a PDF file as single PDF files.
+
+- inject pages from a PDF file into another PDF file
+
+  If you need some pages of another PDF file, you can copy and insert them into
+  your PDF file.
 
 Sorry, currently only a command-line version of this tool is supplied, no
 graphical interface exists (yet...).
