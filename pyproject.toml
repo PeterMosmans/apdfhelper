@@ -1,10 +1,22 @@
 [project]
 name = "apdfhelper"
-version = "0.0.1"
+description = "Annotated PDF helper"
+authors = [
+  {name = "Peter Mosmans", email = "support@go-forward.net"},
+]
+version = "1.4.0"
 dependencies = [
 "pikepdf>=8.6.0",
 "typer>=0.9.0",
 ]
-
+license = "GPL-3.0"
+license-files = [
+"LICENSE",
+]
+[project.urls]
+Homepage = "https://github.com/PeterMosmans/apdfhelper"
+Repository = "https://github.com/PeterMosmans/apdfhelper"
+Issues = "https://github.com/PeterMosmans/apdfhelper/issues"
+Changelog = "https://github.com/PeterMosmans/CHANGELOG.md"
 [project.scripts]
 apdfhelper = "apdfhelper:main"
