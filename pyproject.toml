@@ -1,0 +1,10 @@
+[project]
+name = "apdfhelper"
+version = "0.0.1"
+dependencies = [
+"pikepdf>=8.6.0",
+"typer>=0.9.0",
+]
+
+[project.scripts]
+apdfhelper = "apdfhelper:main"
