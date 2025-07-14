@@ -25,7 +25,7 @@ keywords = [
 Homepage = "https://github.com/PeterMosmans/apdfhelper"
 Repository = "https://github.com/PeterMosmans/apdfhelper"
 Issues = "https://github.com/PeterMosmans/apdfhelper/issues"
-Changelog = "https://github.com/PeterMosmans/CHANGELOG.md"
+Changelog = "https://github.com/PeterMosmans/apdfhelper/blob/main/CHANGELOG.md"
 
 [project.scripts]
 apdfhelper = "apdfhelper:main"
