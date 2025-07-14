@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.4.0](https://github.com/PeterMosmans/apdfhelper/compare/1.3.0...1.4.0) (2025-07-14)
+
+
+### Features
+
+* add main function ([6549a5d](https://github.com/PeterMosmans/apdfhelper/commit/6549a5d058af36a9e39c3c59b794a0642f1b03df))
+* add project file ([b5ca3b1](https://github.com/PeterMosmans/apdfhelper/commit/b5ca3b1ac2af4ddb31313f405d00fc138f0fa477))
+* improve project file ([8523cf2](https://github.com/PeterMosmans/apdfhelper/commit/8523cf2b4153c4e8683c0b78921a141b548f738a))
+* update project file ([3cf4d07](https://github.com/PeterMosmans/apdfhelper/commit/3cf4d072c005ff3cd887f3ef6777fe9a0f827729))
+
 ## [1.3.0](https://github.com/PeterMosmans/apdfhelper/compare/1.2.0...1.3.0) (2024-01-04)
 
 
