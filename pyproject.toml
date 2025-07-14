@@ -9,14 +9,23 @@ dependencies = [
 "pikepdf>=8.6.0",
 "typer>=0.9.0",
 ]
-license = "GPL-3.0"
+license = "GPL-3.0-or-later"
 license-files = [
 "LICENSE",
 ]
+readme = "README.md"
+keywords = [
+"PDF",
+"document",
+"calendar",
+"helper",
+]
+
 [project.urls]
 Homepage = "https://github.com/PeterMosmans/apdfhelper"
 Repository = "https://github.com/PeterMosmans/apdfhelper"
 Issues = "https://github.com/PeterMosmans/apdfhelper/issues"
 Changelog = "https://github.com/PeterMosmans/CHANGELOG.md"
+
 [project.scripts]
 apdfhelper = "apdfhelper:main"
