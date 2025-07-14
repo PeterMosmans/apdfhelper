@@ -584,5 +584,9 @@ def swap(infile: str, outfile: str, source: int, target: int, verbose: bool = Fa
     save_pdf(swap_page(open_pdf(infile), source, target), outfile)
 
 
+def main():
+    return app()
+
+
 if __name__ == "__main__":
     app()
