@@ -49,7 +49,7 @@ graphical interface exists (yet...).
 Python 3 is required.
 
 ```bash
-pip install -r requirements.txt
+pip install "git+https://github.com/PeterMosmans/apdfhelper#egg=apdfhelper"
 ```
 
 ## Workflow
